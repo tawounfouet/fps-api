@@ -15,7 +15,7 @@
 - Revue locale AntiGravity non encore réalisée.
 - GO Thomas pour merge non encore consigné.
 - Commit, push et [PR #4](https://github.com/tawounfouet/fps-api/pull/4) effectués.
-- CI GitHub distante verte sur `7877b74`, run `45606555916`, avec 4 checks verts.
+- CI GitHub distante verte sur `7877b74`, run `45606555916`, puis sur `eda22db`, run `45607083647`, avec 4 checks verts à chaque exécution.
 - Aucun statut `DONE`, merge ni déploiement n'est revendiqué.
 
 ## Obligations légales et confinement
