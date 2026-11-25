@@ -4,11 +4,11 @@
 
 | Identifiant | Réserve | Statut |
 |---|---|---|
-| `M4-R01` | Test de concurrence entre deux workers sur le même claim | À exécuter en intégration avancée |
-| `M4-R02` | Injection de panne à chaque insertion de la transaction Contact | Partiellement couverte par les tests de rollback existants du socle |
-| `M4-R03` | Crash réel après commit et redémarrage du worker | Non exécuté, le comportement est couvert par la conception outbox |
-| `M4-R04` | Sandbox Resend et clé provider isolée | Reporté, aucun appel réel en M4 |
-| `M4-R05` | Tests `tests/contract/contact`, `tests/security/contact` et `tests/resilience/contact` dédiés | Non créés, couverture équivalente dans `tests/unit/contact` et `tests/integration/contact` |
+| `M4-R01` | Test de concurrence entre deux workers sur le même claim | Résolu, voir [09_RESERVES_CLOSURE.md](09_RESERVES_CLOSURE.md) |
+| `M4-R02` | Injection de panne à chaque insertion de la transaction Contact | Résolu, 5 points d'injection, voir [09_RESERVES_CLOSURE.md](09_RESERVES_CLOSURE.md) |
+| `M4-R03` | Crash réel après commit et redémarrage du worker | Résolu, voir [09_RESERVES_CLOSURE.md](09_RESERVES_CLOSURE.md) |
+| `M4-R04` | Sandbox Resend et clé provider isolée | Reporté, owner Thomas Awounfouet, échéance avant toute bascule Resend ou envoi réel |
+| `M4-R05` | Tests `tests/contract/contact`, `tests/security/contact` et `tests/resilience/contact` dédiés | Résolu, dossiers créés et couverts |
 
 ## Réserves de gouvernance
 
@@ -18,7 +18,7 @@
 - CI GitHub distante verte sur `c82c930`, run `45611345202`, avec 4 checks verts.
 - Merge effectué sur `main` via le commit `a8fa0f1f9cf2079041a9ef90e521705a17050ec7`, PR #4 au statut `MERGED`.
 - CI post-merge verte sur le run `45612341896`, avec `quality`, `container-smoke` et `integration-postgres` verts.
-- Jalon clôturé sous réserve de `M4-R01` à `M4-R05`.
+- Jalon clôturé; `M4-R01`, `M4-R02`, `M4-R03` et `M4-R05` sont résolus, `M4-R04` est formellement reporté.
 - Aucun déploiement ni utilisation de PII réelle n'est autorisé.
 
 ## Obligations légales et confinement
@@ -33,5 +33,5 @@
 
 1. [x] Consigner la revue AntiGravity locale et lever ses commentaires.
 2. [x] Obtenir le GO Thomas pour merge.
-3. [ ] Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance.
+3. [x] Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance, voir [09_RESERVES_CLOSURE.md](09_RESERVES_CLOSURE.md).
 4. [x] Merger la PR #4 sur `main` et marquer le jalon `DONE` sans autoriser de déploiement ni de bascule frontend.

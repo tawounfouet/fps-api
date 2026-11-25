@@ -13,6 +13,8 @@ Ce dossier contient les preuves locales du lot `PR-BE-04 - Domaine Contact, soum
 | `06_RESERVES_AND_GATES.md` | Réserves, conditions avant `DONE` et hors périmètre |
 | `07_LOCAL_REVIEW.md` | Revue locale AntiGravity (verdict: APPROVED) |
 | `08_THOMAS_GO.md` | GO Thomas pour le merge de la PR #4 |
+| `09_RESERVES_CLOSURE.md` | Traitement ou report final des réserves `M4-R01` à `M4-R05` |
+| `10_CLOSURE_REVIEW.md` | Revue locale complémentaire du diff de clôture |
 | `M4_GATE_REPORT.md` | Verdict local, critères vérifiés et conditions restantes |
 
-Statut global: **M4_MERGED_ON_MAIN**. La [PR #4](https://github.com/tawounfouet/fps-api/pull/4) est mergée sur `main` via `a8fa0f1`, avec CI post-merge verte sur le run `45612341896`. La revue AntiGravity est `APPROVED` et le GO Thomas est consigné dans `08_THOMAS_GO.md`. Le jalon est clôturé sous réserve de `M4-R01` à `M4-R05`. Aucun déploiement ni utilisation de PII réelle n'est autorisé.
+Statut global: **M4_RESERVES_CLOSED_EXCEPT_R04_REPORTED**. La [PR #4](https://github.com/tawounfouet/fps-api/pull/4) est mergée sur `main` via `a8fa0f1`, avec CI post-merge verte sur le run `45612341896`. La revue AntiGravity initiale est `APPROVED`, la revue complémentaire de clôture est `APPROVED`, et le GO Thomas est consigné dans `08_THOMAS_GO.md`. `M4-R01`, `M4-R02`, `M4-R03` et `M4-R05` sont résolus; `M4-R04` est reporté à avant toute bascule Resend ou envoi réel. Aucun déploiement ni utilisation de PII réelle n'est autorisé.
