@@ -6,6 +6,7 @@
 | PR | `PR-BE-02`, à créer |
 | Branche | `feat/be-200-persistence-uow-audit` |
 | Base | `main` @ `d61eb8b7becd1acc90bc08c1e05a9b7d1a5134fe` |
+| Commit | `503bfa6c2d2f7d81d9b818a61d902a7e7d2af806` |
 | Date | 2026-11-25 |
 | Owner | Opencode |
 | Revue requise | locale, agent IDE AntiGravity |
@@ -53,7 +54,7 @@ Détails dans [03_LOCAL_QUALITY_AND_TESTS.md](03_LOCAL_QUALITY_AND_TESTS.md).
 
 ## Conditions restantes
 
-1. Consigner le SHA final après commit local.
+1. [x] Consigner le SHA final après commit local: `503bfa6c2d2f7d81d9b818a61d902a7e7d2af806`.
 2. Pousser la branche et ouvrir `PR-BE-02`.
 3. Obtenir une CI GitHub distante verte au SHA exact, y compris le job PostgreSQL.
 4. Donner la signature finale et décider du merge après vérification de la CI.
