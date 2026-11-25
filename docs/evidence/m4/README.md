@@ -13,4 +13,4 @@ Ce dossier contient les preuves locales du lot `PR-BE-04 - Domaine Contact, soum
 | `06_RESERVES_AND_GATES.md` | Réserves, conditions avant `DONE` et hors périmètre |
 | `M4_GATE_REPORT.md` | Verdict local, critères vérifiés et conditions restantes |
 
-Statut global: **LOCAL_PASS_IMPLEMENTATION / GO_FOR_REVIEW**. L'implémentation locale et les preuves sont réunies. La revue AntiGravity, le GO Thomas, le commit, le push, la PR et la CI distante restent à réaliser. Aucun merge, déploiement ni statut `DONE` n'est revendiqué.
+Statut global: **LOCAL_PASS_IMPLEMENTATION / GO_FOR_REVIEW**. L'implémentation locale, les preuves, le commit, le push et la [PR #4](https://github.com/tawounfouet/fps-api/pull/4) sont en place. La revue AntiGravity, le GO Thomas et la CI distante restent à finaliser. Aucun merge, déploiement ni statut `DONE` n'est revendiqué.

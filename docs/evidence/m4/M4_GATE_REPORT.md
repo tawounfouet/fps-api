@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Ticket | `BE-400-01` à `BE-400-16` |
-| PR | `PR-BE-04`, à ouvrir |
+| PR | [#4](https://github.com/tawounfouet/fps-api/pull/4), ouverte |
 | Branche | `feat/be-400-contact-domain-durable-submission` |
 | Base | `main` @ `8ee9fa44a492f53e02b0a91a2296d48051a41517` |
 | Commit | `17bece2c190f5d4008b27496ee42cd7f4d4c9364` |
@@ -36,7 +36,7 @@
 - [x] Aucune PII réelle, email réel, production ou changement frontend dans le lot.
 - [ ] Revue locale AntiGravity.
 - [ ] GO Thomas.
-- [ ] Commit, push et `PR-BE-04`.
+- [x] Commit `17bece2`, push de la branche et ouverture de la [PR #4](https://github.com/tawounfouet/fps-api/pull/4).
 - [ ] CI GitHub distante verte sur le SHA final.
 - [ ] Réserves `M4-R01` à `M4-R05` traitées ou reportées.
 
@@ -57,8 +57,7 @@ Détails dans [04_LOCAL_QUALITY_AND_TESTS.md](04_LOCAL_QUALITY_AND_TESTS.md), [0
 
 1. Revue locale AntiGravity consignée et approuvée.
 2. GO Thomas obtenu et consigné.
-3. Commiter le lot, pousser la branche et ouvrir `PR-BE-04`.
-4. Obtenir une CI GitHub distante verte.
-5. Ne revendiquer `DONE`, merge ou déploiement qu'après signature finale et traitement des réserves.
+3. Obtenir une CI GitHub distante verte.
+4. Ne revendiquer `DONE`, merge ou déploiement qu'après signature finale et traitement des réserves.
 
 Tant que ces conditions ne sont pas remplies, aucun `DONE`, merge ni déploiement n'est revendiqué.
