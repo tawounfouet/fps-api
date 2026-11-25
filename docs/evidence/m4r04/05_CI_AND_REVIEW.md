@@ -11,7 +11,7 @@
 | CI post-merge | **PASSED**, run [`45656145100`](https://github.com/tawounfouet/fps-api/actions/runs/45656145100) |
 | Jobs post-merge | `quality` PASS, `container-smoke` PASS, `integration-postgres` PASS |
 | Revue `code-reviewer` locale | **APPROVED**, aucun finding restant |
-| Revue Thomas | Non exécutée |
+| GO utilisateur | Donné le 2026-11-25 pour le smoke provider réel |
 
 ## Revue locale
 
@@ -21,10 +21,10 @@ La revue `code-reviewer` a d'abord demandé des changements: TLS sans vérificat
 
 Les runs émettent des avertissements `Node.js 20 is deprecated` pour `actions/checkout@v4` et `astral-sh/setup-uv@v6`, forcés sur Node.js 24. Ces avertissements sont non bloquants et les trois jobs backend sont verts.
 
-## Actions restantes avant clôture
+## Actions de clôture
 
-1. Obtenir la confirmation de rotation des identifiants exposés.
-2. Réaliser un smoke avec provider réel depuis un sandbox isolé, après GO explicite.
-3. Consigner la preuve de rotation et le résultat du smoke réel.
+1. Rotation des identifiants exposés confirmée le 2026-11-25.
+2. Smoke provider réel exécuté avec GO explicite, preuve dans `06_MANUAL_SANDBOX_SMOKE.md`.
+3. Verdict final consigné dans `M4R04_CLOSURE_REPORT.md`.
 
 Les runs verts cités dans `docs/evidence/m4/` appartiennent à la clôture M4. Les runs ci-dessus couvrent spécifiquement `M4-R04`.
