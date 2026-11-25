@@ -1,0 +1,38 @@
+services:
+  api:
+    build: ../..
+    environment:
+      ENVIRONMENT: development
+      SERVICE_NAME: fps-platform-api
+      API_NAME: FPS Content Platform API
+      API_VERSION: 1.0.0
+      RELEASE_SHA: local
+      DEBUG: "false"
+      DOCS_ENABLED: "true"
+      LOG_LEVEL: INFO
+      ALLOWED_ORIGINS: '["http://localhost:3000"]'
+      DATABASE_URL: ${FPS_DATABASE_URL:?set FPS_DATABASE_URL}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: fps
+      POSTGRES_DB: fps
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - fps_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fps -d fps"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  fps_pgdata:
