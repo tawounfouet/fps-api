@@ -8,14 +8,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from fps_platform.api.body_limit import BodySizeLimitMiddleware
 from fps_platform.api.errors import install_exception_handlers
 from fps_platform.api.health import router as health_router
 from fps_platform.api.no_store import AdminNoStoreMiddleware
 from fps_platform.api.test_routes import router as test_router
 from fps_platform.config import Settings
+from fps_platform.modules.contact.api.admin_routes import router as contact_admin_router
+from fps_platform.modules.contact.api.routes import router as contact_router
+from fps_platform.modules.contact.application.ports import EmailDeliveryPort
+from fps_platform.modules.contact.domain.enums import ContactEmailProviderMode
+from fps_platform.modules.contact.infrastructure.email import (
+    DisabledEmailDeliveryPort,
+    MockEmailDeliveryPort,
+)
+from fps_platform.modules.contact.infrastructure.rate_limit import InMemoryContactRateLimiter
 from fps_platform.modules.identity.api.routes import router as admin_router
 from fps_platform.modules.identity.infrastructure.oidc.factory import build_token_validator
 from fps_platform.observability.middleware import CorrelationIdMiddleware
+from fps_platform.shared.domain.clock import SystemClock
 from fps_platform.shared.infrastructure.persistence.engine import (
     DatabaseRuntimeSettings,
     create_db_engine,
@@ -57,6 +68,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.session_factory = None
 
 
+def build_email_port(settings: Settings) -> EmailDeliveryPort:
+    if settings.contact_email_provider_mode is ContactEmailProviderMode.DISABLED:
+        return DisabledEmailDeliveryPort()
+    return MockEmailDeliveryPort(settings.contact_email_provider)
+
+
 def create_app(settings: Settings | None = None, *, include_test_routes: bool = False) -> FastAPI:
     resolved = settings or Settings()
     app = FastAPI(
@@ -71,6 +88,9 @@ def create_app(settings: Settings | None = None, *, include_test_routes: bool = 
     app.state.settings = resolved
     app.state.db_engine = None
     app.state.session_factory = None
+    app.state.clock = SystemClock()
+    app.state.contact_rate_limiter = InMemoryContactRateLimiter(app.state.clock)
+    app.state.email_delivery_port = build_email_port(resolved)
     app.state.token_validator = build_token_validator(resolved)
     app.add_middleware(
         CORSMiddleware,
@@ -80,15 +100,23 @@ def create_app(settings: Settings | None = None, *, include_test_routes: bool = 
         allow_headers=[
             "Authorization",
             "Content-Type",
+            "Idempotency-Key",
             "X-Correlation-ID",
             "X-Request-ID",
         ],
         max_age=600,
     )
     app.add_middleware(AdminNoStoreMiddleware)
+    app.add_middleware(
+        BodySizeLimitMiddleware,
+        path="/api/v1/contact",
+        max_bytes=resolved.contact_max_body_bytes,
+    )
     app.add_middleware(CorrelationIdMiddleware, settings=resolved)
     install_exception_handlers(app)
     app.include_router(health_router)
+    app.include_router(contact_router)
+    app.include_router(contact_admin_router)
     app.include_router(admin_router)
     if include_test_routes:
         app.include_router(test_router)

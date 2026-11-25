@@ -6,9 +6,17 @@ from urllib.parse import urlparse
 from pydantic import AnyHttpUrl, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from fps_platform.modules.contact.domain.enums import ContactEmailProviderMode
+
 ALLOWED_LOG_LEVELS = frozenset({"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"})
 DATABASE_SCHEMES = frozenset({"postgresql", "postgresql+psycopg"})
 OIDC_ALGORITHMS = frozenset({"RS256", "ES256", "PS256"})
+MIN_CONTACT_RATE_LIMIT = 1
+MAX_CONTACT_RATE_LIMIT = 1000
+MIN_CONTACT_BODY_BYTES = 1024
+MAX_CONTACT_BODY_BYTES = 65536
+MAX_CONTACT_PROXY_COUNT = 10
+MAX_CONTACT_RETRY_DELAY_SECONDS = 86400
 
 
 class Environment(StrEnum):
@@ -48,6 +56,20 @@ class Settings(BaseSettings):
     oidc_algorithms: list[str] = Field(default_factory=lambda: ["RS256"])
     oidc_jwks_cache_ttl_seconds: int = 300
     oidc_clock_leeway_seconds: int = 30
+    contact_rate_limit_per_window: int = 5
+    contact_rate_limit_window_seconds: int = 600
+    contact_max_body_bytes: int = 16384
+    contact_trusted_proxy_count: int = 0
+    contact_email_provider_mode: ContactEmailProviderMode = ContactEmailProviderMode.MOCK
+    contact_email_provider: str = "mock"
+    contact_email_template_code: str = "contact_request"
+    contact_email_recipient_group_code: str = "contact_team"
+    contact_delivery_max_attempts: int = 5
+    contact_delivery_retry_delays_seconds: list[int] = Field(
+        default_factory=lambda: [60, 300, 1500, 7200]
+    )
+    contact_worker_lease_seconds: int = 60
+    contact_worker_batch_size: int = 20
 
     @field_validator("log_level")
     @classmethod
@@ -143,6 +165,71 @@ class Settings(BaseSettings):
         if value < 0 or value > 120:
             raise ValueError("OIDC_CLOCK_LEEWAY_SECONDS must be between 0 and 120")
         return value
+
+    @field_validator("contact_rate_limit_per_window")
+    @classmethod
+    def validate_contact_rate_limit(cls, value: int) -> int:
+        if value < MIN_CONTACT_RATE_LIMIT or value > MAX_CONTACT_RATE_LIMIT:
+            raise ValueError("CONTACT_RATE_LIMIT_PER_WINDOW is out of range")
+        return value
+
+    @field_validator("contact_rate_limit_window_seconds", "contact_worker_lease_seconds")
+    @classmethod
+    def validate_contact_seconds(cls, value: int) -> int:
+        if value < 1 or value > 86400:
+            raise ValueError("contact duration settings must be between 1 and 86400 seconds")
+        return value
+
+    @field_validator("contact_max_body_bytes")
+    @classmethod
+    def validate_contact_max_body_bytes(cls, value: int) -> int:
+        if value < MIN_CONTACT_BODY_BYTES or value > MAX_CONTACT_BODY_BYTES:
+            raise ValueError("CONTACT_MAX_BODY_BYTES is out of range")
+        return value
+
+    @field_validator("contact_trusted_proxy_count")
+    @classmethod
+    def validate_contact_trusted_proxy_count(cls, value: int) -> int:
+        if value < 0 or value > MAX_CONTACT_PROXY_COUNT:
+            raise ValueError("CONTACT_TRUSTED_PROXY_COUNT is out of range")
+        return value
+
+    @field_validator("contact_delivery_max_attempts")
+    @classmethod
+    def validate_contact_delivery_max_attempts(cls, value: int) -> int:
+        if value < 1 or value > 100:
+            raise ValueError("CONTACT_DELIVERY_MAX_ATTEMPTS is out of range")
+        return value
+
+    @field_validator("contact_delivery_retry_delays_seconds")
+    @classmethod
+    def validate_contact_retry_delays(cls, values: list[int]) -> list[int]:
+        if len(values) > 99:
+            raise ValueError("CONTACT_DELIVERY_RETRY_DELAYS_SECONDS is too long")
+        for value in values:
+            if value < 1 or value > MAX_CONTACT_RETRY_DELAY_SECONDS:
+                raise ValueError("CONTACT_DELIVERY_RETRY_DELAYS_SECONDS contains an invalid value")
+        return values
+
+    @field_validator("contact_worker_batch_size")
+    @classmethod
+    def validate_contact_worker_batch_size(cls, value: int) -> int:
+        if value < 1 or value > 100:
+            raise ValueError("CONTACT_WORKER_BATCH_SIZE must be between 1 and 100")
+        return value
+
+    @model_validator(mode="after")
+    def enforce_contact_policy(self) -> Settings:
+        expected_provider = {
+            ContactEmailProviderMode.MOCK: "mock",
+            ContactEmailProviderMode.DISABLED: "disabled",
+        }[self.contact_email_provider_mode]
+        if self.contact_email_provider != expected_provider:
+            raise ValueError("contact email provider is inconsistent with the selected mode")
+        expected_delays = self.contact_delivery_max_attempts - 1
+        if len(self.contact_delivery_retry_delays_seconds) < expected_delays:
+            raise ValueError("CONTACT_DELIVERY_RETRY_DELAYS_SECONDS is missing retry delays")
+        return self
 
     @model_validator(mode="after")
     def enforce_oidc_policy(self) -> Settings:

@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection, Engine
 
 from alembic import context
 from fps_platform.modules.audit.infrastructure.persistence import models as audit_models
+from fps_platform.modules.contact.infrastructure.persistence import models as contact_models
 from fps_platform.modules.identity.infrastructure.persistence import models as identity_models
 from fps_platform.modules.outbox.infrastructure.persistence import models as outbox_models
 from fps_platform.shared.infrastructure.persistence.base import Base
@@ -22,6 +23,9 @@ target_metadata = Base.metadata
 _registered_models = (
     audit_models.AuditEventRecord,
     outbox_models.OutboxEventRecord,
+    contact_models.ContactSubmissionRecord,
+    contact_models.ContactDeliveryRecord,
+    contact_models.ContactIdempotencyKeyRecord,
     identity_models.UserRecord,
     identity_models.RoleRecord,
     identity_models.UserRoleRecord,

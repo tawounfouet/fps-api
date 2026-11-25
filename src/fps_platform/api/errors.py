@@ -9,6 +9,18 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from fps_platform.modules.contact.domain.exceptions import (
+    ContactDeliveryError,
+    ContactNotFoundError,
+    ContactPayloadTooLargeError,
+    ContactRateLimitError,
+    ContactUnsupportedMediaTypeError,
+    IdempotencyConflictError,
+    InvalidContactDataError,
+    InvalidContactTransitionError,
+    PermanentContactDeliveryError,
+    RetryableContactDeliveryError,
+)
 from fps_platform.modules.identity.domain.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -161,6 +173,55 @@ IDENTITY_ERROR_RESPONSES: dict[type[Exception], tuple[int, str, str]] = {
     TokenValidationError: (401, "INVALID_TOKEN", "Authentication is required."),
 }
 
+CONTACT_ERROR_RESPONSES: dict[type[Exception], tuple[int, str, str]] = {
+    InvalidContactDataError: (
+        400,
+        "INVALID_CONTACT_DATA",
+        "The contact request contains invalid data.",
+    ),
+    ContactNotFoundError: (404, "CONTACT_NOT_FOUND", "The contact submission was not found."),
+    IdempotencyConflictError: (
+        409,
+        "IDEMPOTENCY_KEY_CONFLICT",
+        "The idempotency key was reused with a different payload.",
+    ),
+    InvalidContactTransitionError: (
+        409,
+        "INVALID_CONTACT_TRANSITION",
+        "The requested contact transition is not allowed.",
+    ),
+    ContactPayloadTooLargeError: (
+        413,
+        "PAYLOAD_TOO_LARGE",
+        "The contact submission payload is too large.",
+    ),
+    ContactUnsupportedMediaTypeError: (
+        415,
+        "UNSUPPORTED_MEDIA_TYPE",
+        "The contact submission requires application/json.",
+    ),
+    ContactRateLimitError: (
+        429,
+        "RATE_LIMITED",
+        "Too many contact submissions were attempted.",
+    ),
+    ContactDeliveryError: (
+        503,
+        "CONTACT_DELIVERY_FAILED",
+        "The contact delivery could not be completed.",
+    ),
+    RetryableContactDeliveryError: (
+        503,
+        "CONTACT_DELIVERY_RETRYABLE",
+        "The contact delivery will be retried.",
+    ),
+    PermanentContactDeliveryError: (
+        503,
+        "CONTACT_DELIVERY_PERMANENT",
+        "The contact delivery failed permanently.",
+    ),
+}
+
 
 async def authentication_handler(_: Request, exc: AuthenticationError) -> JSONResponse:
     code = exc.code if exc.code in AUTH_CODES else "AUTHENTICATION_REQUIRED"
@@ -201,12 +262,27 @@ async def identity_fallback_handler(_: Request, exc: IdentityError) -> JSONRespo
     )
 
 
+async def contact_handler(_: Request, exc: Exception) -> JSONResponse:
+    status_code, code, message = CONTACT_ERROR_RESPONSES[type(exc)]
+    headers = {"Cache-Control": "no-store"}
+    if isinstance(exc, ContactRateLimitError):
+        headers["Retry-After"] = str(exc.retry_after)
+    logger.warning("contact_request_failed", extra={"code": code, "status_code": status_code})
+    return JSONResponse(
+        status_code=status_code,
+        content=error_payload(code=code, message=message),
+        headers=headers,
+    )
+
+
 def install_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AuthenticationError, cast(Any, authentication_handler))
     app.add_exception_handler(AuthorizationError, cast(Any, authorization_handler))
     for error_type in IDENTITY_ERROR_RESPONSES:
         app.add_exception_handler(error_type, cast(Any, identity_handler))
     app.add_exception_handler(IdentityError, cast(Any, identity_fallback_handler))
+    for error_type in CONTACT_ERROR_RESPONSES:
+        app.add_exception_handler(error_type, cast(Any, contact_handler))
     app.add_exception_handler(RequestValidationError, cast(Any, validation_handler))
     app.add_exception_handler(StarletteHTTPException, cast(Any, http_handler))
     app.add_exception_handler(Exception, cast(Any, unhandled_handler))

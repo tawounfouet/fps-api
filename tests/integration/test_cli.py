@@ -116,6 +116,6 @@ def test_diagnostics_are_safe(database_url: str) -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["status"] == "ok"
-    assert payload["migration"] == "9c4f6a1d8b72"
+    assert payload["migration"] == "c8cfc1256c53"
     assert "url" not in payload
     assert "password" not in result.stdout.lower()
