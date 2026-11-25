@@ -1,0 +1,322 @@
+{
+  "artifact": "BE-000-11_CONTENT_SCHEMA_VERSIONING_EXAMPLES",
+  "as_of": "2026-11-25",
+  "status": "ILLUSTRATIVE_DOC_FIXTURES_NOT_EXECUTABLE_PYDANTIC_OR_DB_TESTS",
+  "rules": {
+    "active_design_document_version": 1,
+    "active_design_block_schema_version": 1,
+    "future_v2_and_breaking_v3": "EXAMPLES_ONLY_NOT_ENABLED",
+    "block_type_namespace": "UPPER_SNAKE_CASE",
+    "wire_discriminator": "type",
+    "historic_decode_key": [
+      "type",
+      "block_schema_version"
+    ],
+    "write_unknown": "REJECT",
+    "history_unknown": "SAFE_FALLBACK_WITH_TELEMETRY_AND_NO_RAW_RENDER",
+    "snapshot": "IMMUTABLE_INSERT_ONLY"
+  },
+  "examples": [
+    {
+      "id": "PAGE_V1",
+      "meaning": "Initial page document envelope, two blocks and 0..N-1 positions",
+      "kind": "page_document",
+      "schema_status": "MVP_V1_DESIGN",
+      "expected": "ACCEPT_DESIGN",
+      "value": {
+        "content_document_version": 1,
+        "blocks": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "type": "HERO",
+            "block_schema_version": 1,
+            "position": 0,
+            "payload": {
+              "headline": "Expertise opérationnelle",
+              "alignment": "LEFT",
+              "theme": "LIGHT"
+            }
+          },
+          {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "type": "IMAGE",
+            "block_schema_version": 1,
+            "position": 1,
+            "payload": {
+              "media_asset_id": "33333333-3333-4333-8333-333333333333",
+              "width_mode": "CONTENT",
+              "alignment": "CENTER",
+              "decorative": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "HERO_V1",
+      "meaning": "Initial Hero schema",
+      "kind": "block",
+      "schema_status": "MVP_V1_DESIGN",
+      "expected": "ACCEPT_DESIGN",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "HERO",
+        "block_schema_version": 1,
+        "position": 0,
+        "payload": {
+          "headline": "Expertise opérationnelle",
+          "alignment": "LEFT",
+          "theme": "LIGHT"
+        }
+      }
+    },
+    {
+      "id": "HERO_V2_ADDITIVE",
+      "meaning": "Future additive optional content_width with neutral STANDARD default",
+      "kind": "block",
+      "schema_status": "FUTURE_ONLY",
+      "expected": "ACCEPT_AFTER_RENDERER_GATE",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "HERO",
+        "block_schema_version": 2,
+        "position": 0,
+        "payload": {
+          "headline": "Expertise opérationnelle",
+          "alignment": "LEFT",
+          "theme": "LIGHT",
+          "content_width": "STANDARD"
+        }
+      }
+    },
+    {
+      "id": "PAGE_V1_WITH_HERO_V2",
+      "meaning": "Document envelope version remains 1 even as one block payload version becomes 2",
+      "kind": "page_document",
+      "schema_status": "FUTURE_ONLY",
+      "expected": "ACCEPT_AFTER_RENDERER_GATE",
+      "value": {
+        "content_document_version": 1,
+        "blocks": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "type": "HERO",
+            "block_schema_version": 2,
+            "position": 0,
+            "payload": {
+              "headline": "Expertise opérationnelle",
+              "alignment": "LEFT",
+              "theme": "LIGHT",
+              "content_width": "STANDARD"
+            }
+          },
+          {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "type": "IMAGE",
+            "block_schema_version": 1,
+            "position": 1,
+            "payload": {
+              "media_asset_id": "33333333-3333-4333-8333-333333333333",
+              "width_mode": "CONTENT",
+              "alignment": "CENTER",
+              "decorative": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "HERO_V3_BREAKING_RENAME",
+      "meaning": "Hypothetical future headline -> title; version 3 must have explicit migration and renderer support",
+      "kind": "block",
+      "schema_status": "FUTURE_ONLY",
+      "expected": "MIGRATION_REQUIRED",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "HERO",
+        "block_schema_version": 3,
+        "position": 0,
+        "payload": {
+          "alignment": "LEFT",
+          "theme": "LIGHT",
+          "content_width": "STANDARD",
+          "title": "Expertise opérationnelle"
+        }
+      }
+    },
+    {
+      "id": "BLOG_V1",
+      "meaning": "Blog keeps structured rich text document instead of reusing Page block array",
+      "kind": "blog_document",
+      "schema_status": "MVP_V1_DESIGN",
+      "expected": "ACCEPT_DESIGN",
+      "value": {
+        "content_document_version": 1,
+        "format": "STRUCTURED_RICH_TEXT",
+        "nodes": [
+          {
+            "type": "paragraph",
+            "children": [
+              {
+                "type": "text",
+                "text": "Publication scientifique et opérations cliniques."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "HERO_UNKNOWN_VERSION",
+      "meaning": "Write/publish must fail closed",
+      "kind": "block",
+      "schema_status": "INVALID",
+      "expected": "UNSUPPORTED_BLOCK_SCHEMA_VERSION",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "HERO",
+        "block_schema_version": 999,
+        "position": 0,
+        "payload": {
+          "headline": "Expertise opérationnelle",
+          "alignment": "LEFT",
+          "theme": "LIGHT"
+        }
+      }
+    },
+    {
+      "id": "UNKNOWN_BLOCK_TYPE",
+      "meaning": "Write/publish must reject and never render raw payload",
+      "kind": "block",
+      "schema_status": "INVALID",
+      "expected": "UNSUPPORTED_BLOCK_TYPE",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "CUSTOM_SCRIPT",
+        "block_schema_version": 1,
+        "position": 0,
+        "payload": {
+          "html": "<script>alert('unsafe')</script>"
+        }
+      }
+    },
+    {
+      "id": "HERO_V1_MISSING_HEADLINE",
+      "meaning": "Required field missing",
+      "kind": "block",
+      "schema_status": "INVALID",
+      "expected": "VALIDATION_ERROR",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "HERO",
+        "block_schema_version": 1,
+        "position": 0,
+        "payload": {
+          "alignment": "LEFT",
+          "theme": "LIGHT"
+        }
+      }
+    },
+    {
+      "id": "DUPLICATE_POSITION",
+      "meaning": "A page with duplicate positions fails domain validation even if each payload independently parses",
+      "kind": "page_document",
+      "schema_status": "INVALID",
+      "expected": "DUPLICATE_BLOCK_POSITION",
+      "value": {
+        "content_document_version": 1,
+        "blocks": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "type": "HERO",
+            "block_schema_version": 1,
+            "position": 0,
+            "payload": {
+              "headline": "Expertise opérationnelle",
+              "alignment": "LEFT",
+              "theme": "LIGHT"
+            }
+          },
+          {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "type": "IMAGE",
+            "block_schema_version": 1,
+            "position": 0,
+            "payload": {
+              "media_asset_id": "33333333-3333-4333-8333-333333333333",
+              "width_mode": "CONTENT",
+              "alignment": "CENTER",
+              "decorative": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "BLOG_UNKNOWN_FORMAT",
+      "meaning": "Unknown rich text format is not accepted for write/publish",
+      "kind": "blog_document",
+      "schema_status": "INVALID",
+      "expected": "UNSUPPORTED_DOCUMENT_FORMAT",
+      "value": {
+        "content_document_version": 1,
+        "format": "RAW_HTML",
+        "nodes": [
+          {
+            "type": "paragraph",
+            "children": [
+              {
+                "type": "text",
+                "text": "Publication scientifique et opérations cliniques."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "LEGACY_LOWERCASE_TYPE",
+      "meaning": "Source 10 old example lowercase type needs explicit BE-000-12 import mapping",
+      "kind": "block",
+      "schema_status": "LEGACY_IMPORT_ONLY",
+      "expected": "REJECT_ON_V1_WRITE_OR_EXPLICIT_IMPORT_MAP",
+      "value": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "hero",
+        "block_schema_version": 1,
+        "position": 0,
+        "payload": {
+          "headline": "Expertise opérationnelle",
+          "alignment": "LEFT",
+          "theme": "LIGHT"
+        }
+      }
+    }
+  ],
+  "migration_examples": [
+    {
+      "name": "hero_v1_to_v2_additive",
+      "from": "HERO_V1",
+      "to": "HERO_V2_ADDITIVE",
+      "policy": "Pure deterministic upcast; adds content_width=STANDARD in memory only",
+      "semantic_equivalence_required": true,
+      "mutates_historical_revision": false
+    },
+    {
+      "name": "hero_v2_to_v3_rename",
+      "from": "HERO_V2_ADDITIVE",
+      "to": "HERO_V3_BREAKING_RENAME",
+      "policy": "Pure explicit rename headline to title; new version; confirm every field retained",
+      "semantic_equivalence_required": true,
+      "mutates_historical_revision": false
+    },
+    {
+      "name": "restore_page_revision_v1",
+      "from": "PAGE_V1",
+      "to": "NEW_WORKING_COPY_SAME_PAGE",
+      "policy": "Read and validate old immutable snapshot, upcast memory if needed, optimistic lock, new working copy; publish separately",
+      "semantic_equivalence_required": true,
+      "mutates_historical_revision": false
+    }
+  ]
+}
