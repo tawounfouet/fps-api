@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection, Engine
 
 from alembic import context
 from fps_platform.modules.audit.infrastructure.persistence import models as audit_models
+from fps_platform.modules.identity.infrastructure.persistence import models as identity_models
 from fps_platform.modules.outbox.infrastructure.persistence import models as outbox_models
 from fps_platform.shared.infrastructure.persistence.base import Base
 
@@ -18,7 +19,13 @@ elif not config.get_main_option("sqlalchemy.url"):
     raise RuntimeError("DATABASE_URL or FPS_DATABASE_URL is required")
 
 target_metadata = Base.metadata
-_registered_models = (audit_models.AuditEventRecord, outbox_models.OutboxEventRecord)
+_registered_models = (
+    audit_models.AuditEventRecord,
+    outbox_models.OutboxEventRecord,
+    identity_models.UserRecord,
+    identity_models.RoleRecord,
+    identity_models.UserRoleRecord,
+)
 
 
 def get_url() -> str:

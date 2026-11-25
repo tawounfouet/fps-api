@@ -4,7 +4,7 @@
 |---|---|
 | Ticket | BE-000-07 / M0 |
 | Date | 2026-11-25 |
-| Statut | ACCEPTED_DESIGN; aucun endpoint implémenté |
+| Statut | ACCEPTED_DESIGN; endpoints IAM M3 implémentés, autres routes à venir |
 | Références | `api-v1-conventions.md`, `15_FPS_CONTENT_PLATFORM_IDENTITY_AND_ACCESS_MODEL.md`, ADR-0003, `09_FPS_CONTENT_PLATFORM_API_ARCHITECTURE.md` |
 | Owner | Pilote technique FPS |
 | Points non tranchés | BE-000-08 (états et changements de révisions), BE-000-09 (durabilité), BE-000-11 (blocks) |
@@ -232,3 +232,11 @@ Référence normative de conception : `docs/adr/ADR-0008-content-schema-versioni
 - Le fichier `openapi.v1.draft.json` de BE-000-07 contient encore des `blocks` génériques pour des raisons d'ébauche M0. **Il n'est pas une preuve de conformité** et devra être remplacé par les schémas Pydantic/OpenAPI typés et le client TS en M1/M6.
 
 Tous ces éléments sont `ACCEPTED_DESIGN`, **aucun test runtime ni migration n'a été exécuté dans BE-000-11**.
+
+## Addendum M3 - Implémentation IAM partielle
+
+Les routes IAM de la matrice suivante sont implémentées dans `backends/fps-api`: `GET /me`, `GET /users`, `GET /users/{user_id}`, `POST /users/{user_id}/roles`, `DELETE /users/{user_id}/roles/{role_id}`, `POST /users/{user_id}/suspend`, `POST /users/{user_id}/activate`, `POST /users/{user_id}/disable` et `GET /roles`.
+
+Les permissions sont calculées côté backend à partir des rôles FPS. Les DTO n'exposent ni token ni subject externe. Les réponses admin portent `Cache-Control: no-store`. Les preuves locales sont dans `backends/fps-api/docs/evidence/m3/`.
+
+Les autres routes de la matrice restent des cibles de conception. Aucune implémentation ni preuve n'est revendiquée pour les routes Content, Blog, Contact, Media, Settings ou Audit.

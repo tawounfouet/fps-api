@@ -9,7 +9,20 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from fps_platform.modules.identity.domain.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    DuplicateExternalIdentityError,
+    IdentityError,
+    InvalidUserTransitionError,
+    LastSuperAdminViolationError,
+    RoleNotFoundError,
+    SuperAdminExistsError,
+    TokenValidationError,
+    UserNotFoundError,
+)
 from fps_platform.observability.request_context import get_correlation_id
+from fps_platform.shared.domain.errors import ConflictError
 
 logger = logging.getLogger("fps_platform.errors")
 
@@ -114,7 +127,86 @@ async def unhandled_handler(_: Request, exc: Exception) -> JSONResponse:
     )
 
 
+AUTH_CODES = frozenset(
+    {
+        "AUTHENTICATION_REQUIRED",
+        "INVALID_TOKEN",
+        "USER_NOT_PROVISIONED",
+        "USER_SUSPENDED",
+        "USER_DISABLED",
+        "PERMISSION_DENIED",
+    }
+)
+
+IDENTITY_ERROR_RESPONSES: dict[type[Exception], tuple[int, str, str]] = {
+    UserNotFoundError: (404, "USER_NOT_FOUND", "The requested user was not found."),
+    RoleNotFoundError: (404, "ROLE_NOT_FOUND", "The requested role was not found."),
+    LastSuperAdminViolationError: (
+        409,
+        "LAST_SUPER_ADMIN_VIOLATION",
+        "The last active SUPER_ADMIN cannot be removed.",
+    ),
+    SuperAdminExistsError: (409, "SUPER_ADMIN_EXISTS", "An active SUPER_ADMIN already exists."),
+    DuplicateExternalIdentityError: (
+        409,
+        "IDENTITY_CONFLICT",
+        "The external identity is already linked to a user.",
+    ),
+    InvalidUserTransitionError: (
+        409,
+        "INVALID_USER_TRANSITION",
+        "The requested user transition is not allowed.",
+    ),
+    ConflictError: (409, "CONCURRENT_MODIFICATION", "The request conflicts with current state."),
+    TokenValidationError: (401, "INVALID_TOKEN", "Authentication is required."),
+}
+
+
+async def authentication_handler(_: Request, exc: AuthenticationError) -> JSONResponse:
+    code = exc.code if exc.code in AUTH_CODES else "AUTHENTICATION_REQUIRED"
+    logger.warning("authentication_failed", extra={"code": code})
+    return JSONResponse(
+        status_code=401,
+        content=error_payload(code=code, message=STATUS_MESSAGES[401]),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+async def authorization_handler(_: Request, exc: AuthorizationError) -> JSONResponse:
+    code = exc.code if exc.code in AUTH_CODES else "PERMISSION_DENIED"
+    logger.warning("authorization_failed", extra={"code": code})
+    return JSONResponse(
+        status_code=403,
+        content=error_payload(code=code, message=STATUS_MESSAGES[403]),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+async def identity_handler(_: Request, exc: Exception) -> JSONResponse:
+    status_code, code, message = IDENTITY_ERROR_RESPONSES[type(exc)]
+    logger.warning("identity_request_failed", extra={"code": code})
+    return JSONResponse(
+        status_code=status_code,
+        content=error_payload(code=code, message=message),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+async def identity_fallback_handler(_: Request, exc: IdentityError) -> JSONResponse:
+    logger.warning("identity_request_failed", extra={"code": "INVALID_REQUEST"})
+    return JSONResponse(
+        status_code=400,
+        content=error_payload(code="INVALID_REQUEST", message=STATUS_MESSAGES[400]),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 def install_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(AuthenticationError, cast(Any, authentication_handler))
+    app.add_exception_handler(AuthorizationError, cast(Any, authorization_handler))
+    for error_type in IDENTITY_ERROR_RESPONSES:
+        app.add_exception_handler(error_type, cast(Any, identity_handler))
+    app.add_exception_handler(IdentityError, cast(Any, identity_fallback_handler))
     app.add_exception_handler(RequestValidationError, cast(Any, validation_handler))
     app.add_exception_handler(StarletteHTTPException, cast(Any, http_handler))
     app.add_exception_handler(Exception, cast(Any, unhandled_handler))

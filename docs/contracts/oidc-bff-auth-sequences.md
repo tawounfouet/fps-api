@@ -1,7 +1,7 @@
 # BE-000-04 - Contrats et séquences OIDC / BFF / FastAPI
 
 - **Date :** 2026-11-25
-- **Statut :** ACCEPTED CONTRACT / NOT IMPLEMENTED
+- **Statut :** ACCEPTED CONTRACT / BACKEND M3 IMPLEMENTED; BFF NEXT.JS NOT IMPLEMENTED
 - **Référence :** `docs/adr/ADR-0003-oidc-bff-auth.md`
 - **Sources internes :** `09_FPS_CONTENT_PLATFORM_API_ARCHITECTURE.md`, `15_FPS_CONTENT_PLATFORM_IDENTITY_AND_ACCESS_MODEL.md`, `17_FPS_CONTENT_PLATFORM_SECURITY_PRIVACY_AND_COMPLIANCE_MODEL.md`, plan M0 §BE-000-04.
 - **But :** contrat suffisamment testable sans code FastAPI ni fournisseur OIDC actif.
@@ -176,4 +176,10 @@ Le serveur doit **refuser l'autorisation même si le cookie BFF ou l'access toke
 - [x] Sélection du fournisseur OIDC formellement reportée avant M3; point de revue au 2026-12-09 ou plus tôt si M3 commence avant.
 - [x] Pilote technique FPS désigné comme responsable fonctionnel, porteur du projet jusqu'à attribution nominative.
 
-**Statut : ACCEPTED en tant que contrat documentaire.** Aucun test AUTH n'a été exécuté. La sélection/configuration du fournisseur reste un prérequis impératif avant M3.
+**Statut : ACCEPTED en tant que contrat documentaire.** Aucun test AUTH n'a été exécuté en M0. La sélection/configuration du fournisseur reste un prérequis impératif avant M3.
+
+## Addendum M3 - Implémentation backend partielle
+
+Le backend FastAPI implémente la validation JWT/JWKS de l'access token API, le mapping `(issuer, subject)`, le contrôle de statut `User`, le RBAC FPS, les refus 401/403 et les routes IAM admin. Les tests associés sont consignés dans `backends/fps-api/docs/evidence/m3/`.
+
+Le BFF Next.js, le flux Authorization Code + PKCE, la session cookie, le CSRF, la MFA et la révocation provider ne sont pas implémentés dans ce lot. Aucun test provider réel n'est revendiqué et `DEC-M0-004` reste bloquant avant `DONE`.

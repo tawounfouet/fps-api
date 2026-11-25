@@ -10,6 +10,11 @@ from fps_platform.modules.audit.application.recorder import AuditRecorder
 from fps_platform.modules.audit.infrastructure.persistence.repository import (
     SqlAlchemyAuditEventRepository,
 )
+from fps_platform.modules.identity.infrastructure.persistence.guard import PostgresSuperAdminGuard
+from fps_platform.modules.identity.infrastructure.persistence.repository import (
+    SqlAlchemyRoleRepository,
+    SqlAlchemyUserRepository,
+)
 from fps_platform.modules.outbox.application.recorder import OutboxRecorder
 from fps_platform.modules.outbox.infrastructure.persistence.repository import (
     SqlAlchemyOutboxEventRepository,
@@ -42,6 +47,18 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
     @property
     def outbox_events(self) -> SqlAlchemyOutboxEventRepository:
         return SqlAlchemyOutboxEventRepository(self.session)
+
+    @property
+    def users(self) -> SqlAlchemyUserRepository:
+        return SqlAlchemyUserRepository(self.session, self.clock)
+
+    @property
+    def roles(self) -> SqlAlchemyRoleRepository:
+        return SqlAlchemyRoleRepository(self.session)
+
+    @property
+    def super_admin_guard(self) -> PostgresSuperAdminGuard:
+        return PostgresSuperAdminGuard(self.session)
 
     @property
     def audit_recorder(self) -> AuditRecorder:
