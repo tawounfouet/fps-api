@@ -12,11 +12,11 @@
 
 ## Réserves de gouvernance
 
-- Revue locale AntiGravity non encore réalisée.
-- GO Thomas pour merge non encore consigné.
+- Revue locale AntiGravity consignée et approuvée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md).
+- GO Thomas consigné dans [08_THOMAS_GO.md](08_THOMAS_GO.md).
 - Commit, push et [PR #4](https://github.com/tawounfouet/fps-api/pull/4) effectués.
-- CI GitHub distante verte sur `7877b74`, run `45606555916`, puis sur `eda22db`, run `45607083647`, avec 4 checks verts à chaque exécution.
-- Aucun statut `DONE`, merge ni déploiement n'est revendiqué.
+- CI GitHub distante verte sur `c82c930`, run `45611345202`, avec 4 checks verts.
+- Merge autorisé, mais aucun statut `DONE` ni déploiement n'est encore revendiqué.
 
 ## Obligations légales et confinement
 
@@ -28,7 +28,7 @@
 
 ## Conditions avant `DONE`
 
-1. Consigner la revue AntiGravity locale et lever ses commentaires.
-2. Obtenir le GO Thomas pour merge.
-3. Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance.
-4. Ne marquer les tickets `DONE` qu'après signature finale et avant toute bascule frontend.
+1. [x] Consigner la revue AntiGravity locale et lever ses commentaires.
+2. [x] Obtenir le GO Thomas pour merge.
+3. [ ] Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance.
+4. [ ] Merger la PR #4 sur `main`, puis marquer les tickets `DONE` sans autoriser de déploiement ni de bascule frontend.

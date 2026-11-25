@@ -7,14 +7,15 @@
 | Branche | `feat/be-400-contact-domain-durable-submission` |
 | Base | `main` @ `8ee9fa44a492f53e02b0a91a2296d48051a41517` |
 | Commit | `17bece2c190f5d4008b27496ee42cd7f4d4c9364` |
+| Commit relu | `c82c930860cccff3c73927e59394ed8f071162ac` |
 | Date | 2026-11-25 |
 | Owner | Opencode / `opencode/big-pickle` |
 | Revue requise | locale, agent IDE AntiGravity |
 | Décideur | Thomas |
-| GO Thomas | à consigner |
+| GO Thomas | consigné dans [08_THOMAS_GO.md](08_THOMAS_GO.md) |
 | Verdict local | **LOCAL_PASS_IMPLEMENTATION** |
-| Verdict jalon | **READY_FOR_THOMAS_MERGE** |
-| Statut `DONE` | **NON** |
+| Verdict jalon | **GO_FOR_M4_MERGE** |
+| Statut `DONE` | **APRÈS MERGE** |
 
 ## Critères vérifiés localement
 
@@ -35,9 +36,9 @@
 - [x] OpenAPI régénéré de façon déterministe avec 9 routes Contact.
 - [x] Aucune PII réelle, email réel, production ou changement frontend dans le lot.
 - [x] Revue locale AntiGravity: consignée et validée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md) (verdict: APPROVED).
-- [ ] GO Thomas pour merge.
+- [x] GO Thomas pour merge, consigné dans [08_THOMAS_GO.md](08_THOMAS_GO.md).
 - [x] Commit `17bece2`, push de la branche et ouverture de la [PR #4](https://github.com/tawounfouet/fps-api/pull/4).
-- [x] CI GitHub distante verte: run `45606555916` sur le lot applicatif et run `45607083647` après mise à jour des preuves, avec `quality`, `integration-postgres`, `container-smoke` et `GitGuardian Security Checks` verts.
+- [x] CI GitHub distante verte: run `45606555916` sur le lot applicatif, run `45607083647` après mise à jour des preuves et run `45611345202` sur `c82c930`, avec `quality`, `integration-postgres`, `container-smoke` et `GitGuardian Security Checks` verts.
 - [ ] Réserves `M4-R01` à `M4-R05` traitées ou reportées.
 
 ## Résultats de référence
@@ -50,14 +51,15 @@
 - Secrets: `secret_scan_ok files=213 patterns=6`.
 - OpenAPI: 21 chemins, hash `6b1bb8f873c7db48433eb55fdc3258b8a97cb53d67027cd64ac40acd004642a6`.
 - Worker CLI: statistiques JSON à zéro.
-- CI PR #4: 4 checks verts sur `7877b74`, run `45606555916`, puis 4 checks verts sur `eda22db`, run `45607083647`.
+- CI PR #4: 4 checks verts sur `7877b74`, run `45606555916`, puis 4 checks verts sur `eda22db`, run `45607083647`, puis 4 checks verts sur `c82c930`, run `45611345202`.
 
 Détails dans [04_LOCAL_QUALITY_AND_TESTS.md](04_LOCAL_QUALITY_AND_TESTS.md), [05_OPENAPI_AND_CONTRACT.md](05_OPENAPI_AND_CONTRACT.md) et [06_RESERVES_AND_GATES.md](06_RESERVES_AND_GATES.md).
 
 ## Conditions restantes
 
-1. Revue locale AntiGravity consignée et approuvée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md) (verdict: APPROVED).
-2. GO Thomas pour merge de la PR #4.
-3. Ne revendiquer `DONE`, merge ou déploiement qu'après signature finale et traitement des réserves.
+1. [x] Revue locale AntiGravity consignée et approuvée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md) (verdict: APPROVED).
+2. [x] GO Thomas pour merge de la PR #4, consigné dans [08_THOMAS_GO.md](08_THOMAS_GO.md).
+3. [ ] Merger la PR #4 sur `main`, vérifier le commit de merge et attendre la CI post-merge.
+4. [ ] Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05`.
 
-Tant que ces conditions ne sont pas remplies, aucun `DONE`, merge ni déploiement n'est revendiqué.
+Tant que le merge n'est pas effectué, aucun `DONE` ni déploiement n'est revendiqué.
