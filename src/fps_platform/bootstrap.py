@@ -22,7 +22,10 @@ from fps_platform.modules.contact.infrastructure.email import (
     DisabledEmailDeliveryPort,
     MockEmailDeliveryPort,
 )
+from fps_platform.modules.contact.infrastructure.imap import ImapInboxProbePort
 from fps_platform.modules.contact.infrastructure.rate_limit import InMemoryContactRateLimiter
+from fps_platform.modules.contact.infrastructure.resend import ResendEmailDeliveryPort
+from fps_platform.modules.contact.infrastructure.smtp import SmtpEmailDeliveryPort
 from fps_platform.modules.identity.api.routes import router as admin_router
 from fps_platform.modules.identity.infrastructure.oidc.factory import build_token_validator
 from fps_platform.observability.middleware import CorrelationIdMiddleware
@@ -63,6 +66,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        email_port = app.state.email_delivery_port
+        close = getattr(email_port, "close", None)
+        if callable(close):
+            close()
         if engine is not None:
             engine.dispose()
         app.state.session_factory = None
@@ -71,7 +78,54 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def build_email_port(settings: Settings) -> EmailDeliveryPort:
     if settings.contact_email_provider_mode is ContactEmailProviderMode.DISABLED:
         return DisabledEmailDeliveryPort()
+    if settings.contact_email_provider_mode is ContactEmailProviderMode.RESEND:
+        if (
+            settings.resend_api_key is None
+            or settings.resend_base_url is None
+            or settings.sender_email is None
+            or settings.notify_email is None
+        ):
+            raise RuntimeError("resend configuration is incomplete")
+        return ResendEmailDeliveryPort(
+            api_key=settings.resend_api_key.get_secret_value(),
+            base_url=settings.resend_base_url,
+            sender_email=settings.sender_email,
+            recipient_email=settings.notify_email,
+            timeout_seconds=settings.email_request_timeout_seconds,
+        )
+    if settings.contact_email_provider_mode is ContactEmailProviderMode.SMTP:
+        if (
+            settings.smtp_host is None
+            or settings.smtp_user is None
+            or settings.smtp_password is None
+            or settings.sender_email is None
+            or settings.notify_email is None
+        ):
+            raise RuntimeError("smtp configuration is incomplete")
+        return SmtpEmailDeliveryPort(
+            host=settings.smtp_host,
+            port=settings.smtp_port,
+            user=settings.smtp_user,
+            password=settings.smtp_password.get_secret_value(),
+            sender_email=settings.sender_email,
+            recipient_email=settings.notify_email,
+            use_ssl=settings.smtp_use_ssl,
+            timeout_seconds=settings.email_request_timeout_seconds,
+        )
     return MockEmailDeliveryPort(settings.contact_email_provider)
+
+
+def build_imap_probe(settings: Settings) -> ImapInboxProbePort | None:
+    if settings.imap_host is None or settings.imap_user is None or settings.imap_password is None:
+        return None
+    return ImapInboxProbePort(
+        host=settings.imap_host,
+        port=settings.imap_port,
+        user=settings.imap_user,
+        password=settings.imap_password.get_secret_value(),
+        use_ssl=settings.imap_use_ssl,
+        timeout_seconds=settings.email_request_timeout_seconds,
+    )
 
 
 def create_app(settings: Settings | None = None, *, include_test_routes: bool = False) -> FastAPI:
@@ -91,6 +145,7 @@ def create_app(settings: Settings | None = None, *, include_test_routes: bool = 
     app.state.clock = SystemClock()
     app.state.contact_rate_limiter = InMemoryContactRateLimiter(app.state.clock)
     app.state.email_delivery_port = build_email_port(resolved)
+    app.state.imap_inbox_probe = build_imap_probe(resolved)
     app.state.token_validator = build_token_validator(resolved)
     app.add_middleware(
         CORSMiddleware,

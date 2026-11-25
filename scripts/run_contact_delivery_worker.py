@@ -44,9 +44,10 @@ def main() -> None:
             ),
         )
 
+    email_port = build_email_port(settings)
     worker = build_contact_delivery_worker(
         uow_factory=uow_factory,
-        email_port=build_email_port(settings),
+        email_port=email_port,
         clock=clock,
         provider=settings.contact_email_provider,
         retry_delays_seconds=settings.contact_delivery_retry_delays_seconds,
@@ -57,6 +58,9 @@ def main() -> None:
         stats = worker.run_once(limit=settings.contact_worker_batch_size)
         print(json.dumps(asdict(stats), sort_keys=True))
     finally:
+        close = getattr(email_port, "close", None)
+        if callable(close):
+            close()
         engine.dispose()
 
 
