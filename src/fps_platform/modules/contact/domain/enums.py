@@ -41,3 +41,5 @@ class ContactDeliveryChannel(StrEnum):
 class ContactEmailProviderMode(StrEnum):
     MOCK = "mock"
     DISABLED = "disabled"
+    RESEND = "resend"
+    SMTP = "smtp"

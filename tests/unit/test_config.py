@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from fps_platform.config import Environment, Settings
+from fps_platform.modules.contact.domain.enums import ContactEmailProviderMode
 
 
 def test_default_settings_are_locally_safe() -> None:
@@ -92,3 +93,111 @@ def test_production_oidc_requires_https() -> None:
             oidc_audience="fps-api",
             oidc_jwks_url="http://idp.example.test/jwks",
         )
+
+
+def test_resend_mode_requires_isolated_configuration() -> None:
+    with pytest.raises(ValidationError, match="RESEND_API_KEY"):
+        Settings(
+            _env_file=None,
+            contact_email_provider_mode=ContactEmailProviderMode.RESEND,
+            contact_email_provider="resend",
+        )
+
+
+def test_resend_configuration_is_masked() -> None:
+    settings = Settings(
+        _env_file=None,
+        contact_email_provider_mode=ContactEmailProviderMode.RESEND,
+        contact_email_provider="resend",
+        resend_api_key="placeholder-key",
+        resend_base_url="https://api.example.test",
+        sender_email="sender@example.test",
+        notify_email="ops@example.test",
+    )
+    assert settings.resend_api_key is not None
+    assert "placeholder-key" not in repr(settings)
+    assert settings.resend_base_url == "https://api.example.test"
+
+
+def test_resend_mode_rejects_inconsistent_provider() -> None:
+    with pytest.raises(ValidationError, match="inconsistent"):
+        Settings(
+            _env_file=None,
+            contact_email_provider_mode=ContactEmailProviderMode.RESEND,
+            contact_email_provider="mock",
+            resend_api_key="placeholder-key",
+            resend_base_url="https://api.example.test",
+            sender_email="sender@example.test",
+            notify_email="ops@example.test",
+        )
+
+
+def test_resend_base_url_must_be_absolute() -> None:
+    with pytest.raises(ValidationError, match="RESEND_BASE_URL"):
+        Settings(
+            _env_file=None,
+            contact_email_provider_mode=ContactEmailProviderMode.RESEND,
+            contact_email_provider="resend",
+            resend_api_key="placeholder-key",
+            resend_base_url="api.example.test",
+            sender_email="sender@example.test",
+            notify_email="ops@example.test",
+        )
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "https://user:pass@api.example.test",
+        "https://api.example.test?key=placeholder",
+        "https://api.example.test#fragment",
+    ],
+)
+def test_resend_base_url_rejects_sensitive_components(base_url: str) -> None:
+    with pytest.raises(ValidationError, match="credentials, query or fragment"):
+        Settings(_env_file=None, resend_base_url=base_url)
+
+
+@pytest.mark.parametrize("timeout", [0, float("nan"), 61])
+def test_email_timeout_is_bounded(timeout: float) -> None:
+    with pytest.raises(ValidationError, match="EMAIL_REQUEST_TIMEOUT_SECONDS"):
+        Settings(_env_file=None, email_request_timeout_seconds=timeout)
+
+
+def test_smtp_mode_requires_isolated_configuration() -> None:
+    with pytest.raises(ValidationError, match="SMTP_HOST"):
+        Settings(
+            _env_file=None,
+            contact_email_provider_mode=ContactEmailProviderMode.SMTP,
+            contact_email_provider="smtp",
+        )
+
+
+def test_smtp_mode_does_not_require_imap_configuration() -> None:
+    settings = Settings(
+        _env_file=None,
+        contact_email_provider_mode=ContactEmailProviderMode.SMTP,
+        contact_email_provider="smtp",
+        smtp_host="smtp.example.test",
+        smtp_user="placeholder-user",
+        smtp_password="placeholder-password",
+        sender_email="sender@example.test",
+        notify_email="ops@example.test",
+    )
+    assert settings.imap_host is None
+
+
+def test_mail_ports_are_bounded() -> None:
+    with pytest.raises(ValidationError, match="mail port"):
+        Settings(_env_file=None, smtp_port=0)
+
+
+def test_mail_passwords_are_masked() -> None:
+    settings = Settings(
+        _env_file=None,
+        smtp_password="placeholder-password",
+        imap_host="imap.example.test",
+        imap_user="placeholder-user",
+        imap_password="placeholder-password",
+    )
+    assert "placeholder-password" not in repr(settings)

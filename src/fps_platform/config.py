@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from enum import StrEnum
 from urllib.parse import urlparse
 
@@ -64,6 +65,21 @@ class Settings(BaseSettings):
     contact_email_provider: str = "mock"
     contact_email_template_code: str = "contact_request"
     contact_email_recipient_group_code: str = "contact_team"
+    resend_api_key: SecretStr | None = None
+    resend_base_url: str | None = None
+    sender_email: str | None = None
+    notify_email: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = 465
+    smtp_user: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_use_ssl: bool = True
+    imap_host: str | None = None
+    imap_port: int = 993
+    imap_user: str | None = None
+    imap_password: SecretStr | None = None
+    imap_use_ssl: bool = True
+    email_request_timeout_seconds: float = 10.0
     contact_delivery_max_attempts: int = 5
     contact_delivery_retry_delays_seconds: list[int] = Field(
         default_factory=lambda: [60, 300, 1500, 7200]
@@ -194,6 +210,54 @@ class Settings(BaseSettings):
             raise ValueError("CONTACT_TRUSTED_PROXY_COUNT is out of range")
         return value
 
+    @field_validator("email_request_timeout_seconds")
+    @classmethod
+    def validate_email_request_timeout(cls, value: float) -> float:
+        if not math.isfinite(value) or value < 1 or value > 60:
+            raise ValueError("EMAIL_REQUEST_TIMEOUT_SECONDS is out of range")
+        return value
+
+    @field_validator("sender_email", "notify_email")
+    @classmethod
+    def validate_email_identity(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized or any(character.isspace() for character in normalized):
+            raise ValueError("email identity must not contain whitespace")
+        if "@" not in normalized:
+            raise ValueError("email identity must be an email address")
+        return normalized
+
+    @field_validator("smtp_host", "imap_host")
+    @classmethod
+    def validate_mail_host(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized or any(character.isspace() for character in normalized):
+            raise ValueError("mail host must not contain whitespace")
+        return normalized
+
+    @field_validator("smtp_port", "imap_port")
+    @classmethod
+    def validate_mail_port(cls, value: int) -> int:
+        if value < 1 or value > 65535:
+            raise ValueError("mail port must be between 1 and 65535")
+        return value
+
+    @field_validator("resend_base_url")
+    @classmethod
+    def validate_resend_base_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        parsed = urlparse(value)
+        if parsed.scheme not in {"http", "https"} or parsed.netloc == "":
+            raise ValueError("RESEND_BASE_URL must be an absolute http or https URL")
+        if parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise ValueError("RESEND_BASE_URL must not contain credentials, query or fragment")
+        return value.rstrip("/")
+
     @field_validator("contact_delivery_max_attempts")
     @classmethod
     def validate_contact_delivery_max_attempts(cls, value: int) -> int:
@@ -223,12 +287,78 @@ class Settings(BaseSettings):
         expected_provider = {
             ContactEmailProviderMode.MOCK: "mock",
             ContactEmailProviderMode.DISABLED: "disabled",
+            ContactEmailProviderMode.RESEND: "resend",
+            ContactEmailProviderMode.SMTP: "smtp",
         }[self.contact_email_provider_mode]
         if self.contact_email_provider != expected_provider:
             raise ValueError("contact email provider is inconsistent with the selected mode")
         expected_delays = self.contact_delivery_max_attempts - 1
         if len(self.contact_delivery_retry_delays_seconds) < expected_delays:
             raise ValueError("CONTACT_DELIVERY_RETRY_DELAYS_SECONDS is missing retry delays")
+        return self
+
+    @model_validator(mode="after")
+    def enforce_resend_policy(self) -> Settings:
+        if self.contact_email_provider_mode is not ContactEmailProviderMode.RESEND:
+            return self
+        missing: list[str] = []
+        if self.resend_api_key is None:
+            missing.append("RESEND_API_KEY")
+        if self.resend_base_url is None:
+            missing.append("RESEND_BASE_URL")
+        if self.sender_email is None:
+            missing.append("SENDER_EMAIL")
+        if self.notify_email is None:
+            missing.append("NOTIFY_EMAIL")
+        if missing:
+            raise ValueError(f"missing Resend configuration: {', '.join(missing)}")
+        if (
+            self.environment is Environment.PRODUCTION
+            and self.resend_base_url is not None
+            and not self.resend_base_url.startswith("https://")
+        ):
+            raise ValueError("RESEND_BASE_URL must use https in production")
+        return self
+
+    @model_validator(mode="after")
+    def enforce_smtp_policy(self) -> Settings:
+        if self.contact_email_provider_mode is not ContactEmailProviderMode.SMTP:
+            return self
+        missing: list[str] = []
+        if self.smtp_host is None:
+            missing.append("SMTP_HOST")
+        if self.smtp_user is None:
+            missing.append("SMTP_USER")
+        if self.smtp_password is None:
+            missing.append("SMTP_PASSWORD")
+        if self.sender_email is None:
+            missing.append("SENDER_EMAIL")
+        if self.notify_email is None:
+            missing.append("NOTIFY_EMAIL")
+        if missing:
+            raise ValueError(f"missing SMTP configuration: {', '.join(missing)}")
+        if self.environment is Environment.PRODUCTION and not self.smtp_use_ssl:
+            raise ValueError("SMTP_USE_SSL must be enabled in production")
+        return self
+
+    @model_validator(mode="after")
+    def enforce_imap_policy(self) -> Settings:
+        configured = any(
+            value is not None for value in (self.imap_host, self.imap_user, self.imap_password)
+        )
+        if not configured:
+            return self
+        missing: list[str] = []
+        if self.imap_host is None:
+            missing.append("IMAP_HOST")
+        if self.imap_user is None:
+            missing.append("IMAP_USER")
+        if self.imap_password is None:
+            missing.append("IMAP_PASSWORD")
+        if missing:
+            raise ValueError(f"missing IMAP configuration: {', '.join(missing)}")
+        if self.environment is Environment.PRODUCTION and not self.imap_use_ssl:
+            raise ValueError("IMAP_USE_SSL must be enabled in production")
         return self
 
     @model_validator(mode="after")
