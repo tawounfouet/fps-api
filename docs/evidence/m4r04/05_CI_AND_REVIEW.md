@@ -2,12 +2,14 @@
 
 | Élément | État |
 |---|---|
-| Branche locale | `feat/be-m4r04-email-provider` |
-| Commit M4-R04 | Aucun |
-| Push | Non effectué |
-| Pull request | Aucune |
-| CI pull request | Non exécutée |
-| CI post-merge | Non exécutée |
+| Branche | `feat/be-m4r04-email-provider`, poussée puis mergée dans `main` |
+| Commit M4-R04 | `58728d5` - `feat(contact): add isolated email provider modes` |
+| Pull request | [#6](https://github.com/tawounfouet/fps-api/pull/6), MERGED |
+| Merge commit | `4701529` |
+| CI pull request | **PASSED**, run [`45655851717`](https://github.com/tawounfouet/fps-api/actions/runs/45655851717) |
+| Jobs PR | `quality` PASS, `container-smoke` PASS, `integration-postgres` PASS, `GitGuardian Security Checks` PASS |
+| CI post-merge | **PASSED**, run [`45656145100`](https://github.com/tawounfouet/fps-api/actions/runs/45656145100) |
+| Jobs post-merge | `quality` PASS, `container-smoke` PASS, `integration-postgres` PASS |
 | Revue `code-reviewer` locale | **APPROVED**, aucun finding restant |
 | Revue Thomas | Non exécutée |
 
@@ -15,15 +17,14 @@
 
 La revue `code-reviewer` a d'abord demandé des changements: TLS sans vérification de certificat, statut Resend `3xx` traité comme succès, URL Resend avec userinfo/query/fragment acceptée, erreurs réseau IMAP classées permanentes, configuration IMAP imposée en mode `smtp`, timeout NaN accepté, fuite socket STARTTLS, client HTTP du smoke non fermé et documentation de mapping inexacte. Tous les points ont été corrigés puis relus avec verdict `APPROVED`. Aucune revue n'a été attribuée à AntiGravity.
 
-## Actions requises avant clôture
+## Observations CI
 
-1. `M4R04-DEC-01` est ratifiée depuis le 2026-11-25.
-2. La revue locale `code-reviewer` est `APPROVED` après corrections.
-3. Commiter avec un message conventionnel adapté.
-4. Pousser la branche et ouvrir une PR.
-5. Attendre les jobs CI verts.
-6. Consigner les identifiants de run et le SHA dans ce fichier.
+Les runs émettent des avertissements `Node.js 20 is deprecated` pour `actions/checkout@v4` et `astral-sh/setup-uv@v6`, forcés sur Node.js 24. Ces avertissements sont non bloquants et les trois jobs backend sont verts.
 
-## Interdiction
+## Actions restantes avant clôture
 
-Aucune CI ne doit être présentée comme verte pour M4-R04 tant qu'un run réel lié à un commit M4-R04 n'existe pas. Les runs verts cités dans `docs/evidence/m4/` appartiennent à la clôture M4 et ne couvrent pas ce lot.
+1. Obtenir la confirmation de rotation des identifiants exposés.
+2. Réaliser un smoke avec provider réel depuis un sandbox isolé, après GO explicite.
+3. Consigner la preuve de rotation et le résultat du smoke réel.
+
+Les runs verts cités dans `docs/evidence/m4/` appartiennent à la clôture M4. Les runs ci-dessus couvrent spécifiquement `M4-R04`.

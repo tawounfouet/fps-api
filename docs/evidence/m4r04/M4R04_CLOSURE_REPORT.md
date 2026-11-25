@@ -11,8 +11,9 @@
 | Smoke local | Vert, transports factices |
 | Smoke provider réel | Bloqué par rotation des identifiants |
 | Revue locale | `code-reviewer` APPROVED |
-| Commit | Aucun |
-| CI dédiée | Aucune |
+| Commit | `58728d5` |
+| Pull request | [#6](https://github.com/tawounfouet/fps-api/pull/6), MERGED via `4701529` |
+| CI dédiée | PR `45655851717` et post-merge `45656145100`, PASSED |
 | Gate associé | M11 |
 
 ## Ce qui est accompli
@@ -27,15 +28,15 @@
 - Tests locaux verts: 149 tests au total, dont les tests ajoutés pour M4-R04.
 - Smoke sandbox local vert via `scripts/smoke_email_sandbox.py`, sans réseau ni PII.
 - Ruff, format, mypy, scan de secrets, OpenAPI et Alembic verts en local.
+- Revue locale `APPROVED`, PR #6 mergée et CI PR/post-merge vertes.
 - Preuves dédiées créées sous `docs/evidence/m4r04/` sans réécrire M4.
 
 ## Ce qui bloque la clôture
 
 1. Les identifiants exposés dans la conversation doivent être remplacés.
-2. Aucun commit, push, PR ou CI dédiée n'existe.
-3. Aucun smoke avec provider réel n'a été réalisé.
-4. La revue Thomas n'a pas été exécutée.
-5. Aucun GO explicite n'a été donné pour activer un provider réel.
+2. Aucun smoke avec provider réel n'a été réalisé.
+3. La revue Thomas n'a pas été exécutée.
+4. Aucun GO explicite n'a été donné pour activer un provider réel.
 
 ## Décision proposée
 
@@ -43,4 +44,4 @@ Conserver `M4-R04` en réserve ouverte et transférer le lot à la préparation 
 
 ## Prochaine action
 
-Exécuter la revue locale, committer, pousser, ouvrir la PR, attendre la CI verte, obtenir la confirmation de rotation des identifiants exposés, puis réaliser le smoke provider réel avec GO explicite. Tant que ces étapes ne sont pas réalisées, le code reste une implémentation locale non publiée.
+Obtenir la confirmation de rotation des identifiants exposés, puis réaliser le smoke provider réel avec GO explicite. Le code est publié sur `main`; seule la validation réelle avec provider externe reste bloquée.

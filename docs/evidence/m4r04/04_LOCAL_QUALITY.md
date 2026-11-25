@@ -31,23 +31,11 @@ La base de développement `fps` a été migrée avec `alembic upgrade head` avan
 
 ## État Git
 
-Worktree non commité au moment de cette preuve:
+Le lot a été commité puis mergé:
 
 ```text
- M .env.example
- M pyproject.toml
- M scripts/run_contact_delivery_worker.py
- M src/fps_platform/bootstrap.py
- M src/fps_platform/config.py
- M src/fps_platform/modules/contact/domain/enums.py
- M tests/unit/test_config.py
- M uv.lock
-?? docs/evidence/m4r04/
-?? scripts/smoke_email_sandbox.py
-?? src/fps_platform/modules/contact/infrastructure/imap.py
-?? src/fps_platform/modules/contact/infrastructure/resend.py
-?? src/fps_platform/modules/contact/infrastructure/smtp.py
-?? tests/unit/contact/test_imap_probe.py
-?? tests/unit/contact/test_resend_email.py
-?? tests/unit/contact/test_smtp_email.py
+58728d5 feat(contact): add isolated email provider modes
+4701529 Merge pull request #6 from tawounfouet/feat/be-m4r04-email-provider
 ```
+
+Les validations de cette page ont été exécutées sur le worktree avant publication. Les mêmes contrôles ont ensuite été rejoués en CI sur le commit de merge `4701529`.
