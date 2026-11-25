@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
 from fps_platform.api.errors import install_exception_handlers
@@ -13,22 +12,25 @@ from fps_platform.api.health import router as health_router
 from fps_platform.api.test_routes import router as test_router
 from fps_platform.config import Settings
 from fps_platform.observability.middleware import CorrelationIdMiddleware
+from fps_platform.shared.infrastructure.persistence.engine import (
+    DatabaseRuntimeSettings,
+    create_db_engine,
+)
 
 
-def build_db_engine(database_url: str) -> Engine:
-    connect_args = (
-        {"connect_timeout": 2}
-        if database_url.startswith(("postgresql://", "postgresql+psycopg://"))
-        else {}
+def build_db_engine(database_url: str, settings: Settings | None = None) -> Engine:
+    runtime = (
+        DatabaseRuntimeSettings(
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
+            pool_timeout=settings.db_pool_timeout,
+            pool_recycle=settings.db_pool_recycle,
+            connect_timeout=settings.db_connect_timeout,
+        )
+        if settings is not None
+        else None
     )
-    return create_engine(
-        database_url,
-        pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=5,
-        pool_timeout=5,
-        connect_args=connect_args,
-    )
+    return create_db_engine(database_url, runtime)
 
 
 @asynccontextmanager
@@ -36,7 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings: Settings = app.state.settings
     engine: Engine | None = None
     if settings.database_url is not None:
-        engine = build_db_engine(settings.database_url.get_secret_value())
+        engine = build_db_engine(settings.database_url.get_secret_value(), settings)
     app.state.db_engine = engine
     try:
         yield

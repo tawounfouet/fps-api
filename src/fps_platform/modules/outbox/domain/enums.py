@@ -1,0 +1,17 @@
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class OutboxEventType(StrEnum):
+    CONTACT_DELIVERY_REQUESTED = "CONTACT_DELIVERY_REQUESTED"
+    CONTENT_REVALIDATION_REQUESTED = "CONTENT_REVALIDATION_REQUESTED"
+
+
+class OutboxStatus(StrEnum):
+    PENDING = "PENDING"
+    LEASED = "LEASED"
+    RETRY_WAIT = "RETRY_WAIT"
+    BLOCKED_RECONCILIATION = "BLOCKED_RECONCILIATION"
+    DEAD = "DEAD"
+    COMPLETED = "COMPLETED"
