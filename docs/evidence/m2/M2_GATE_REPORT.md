@@ -3,7 +3,7 @@
 | Champ | Valeur |
 |---|---|
 | Ticket | `BE-200-01` à `BE-200-12` |
-| PR | `PR-BE-02`, à créer |
+| PR | `PR-BE-02`, https://github.com/tawounfouet/fps-api/pull/2 |
 | Branche | `feat/be-200-persistence-uow-audit` |
 | Base | `main` @ `d61eb8b7becd1acc90bc08c1e05a9b7d1a5134fe` |
 | Commit | `503bfa6c2d2f7d81d9b818a61d902a7e7d2af806` |
@@ -13,7 +13,7 @@
 | Décideur | Thomas |
 | Verdict local | **LOCAL PASS IMPLEMENTATION** |
 | Verdict jalon | **IMPLEMENTED_REVIEWED_PENDING_CI** |
-| CI distante | non exécutée |
+| CI distante | échec initial diagnostiqué et corrigé, re-vérification en attente |
 | Revue AntiGravity | **APPROVED**, consignée dans [04_LOCAL_REVIEW.md](04_LOCAL_REVIEW.md) |
 | Validation Thomas | **GO publication**, consigné dans [05_THOMAS_GO.md](05_THOMAS_GO.md) |
 | Statut `DONE` | **NON** |
@@ -42,6 +42,7 @@
 - [x] Architecture et runbook documentés.
 - [x] Revue locale AntiGravity `APPROVED`.
 - [x] GO Thomas pour commit, push et ouverture de PR.
+- [x] Incident CI distant diagnostiqué et corrigé dans [06_REMOTE_CI_AND_FIX.md](06_REMOTE_CI_AND_FIX.md).
 
 ## Résultats de référence
 
@@ -55,8 +56,8 @@ Détails dans [03_LOCAL_QUALITY_AND_TESTS.md](03_LOCAL_QUALITY_AND_TESTS.md).
 ## Conditions restantes
 
 1. [x] Consigner le SHA final après commit local: `503bfa6c2d2f7d81d9b818a61d902a7e7d2af806`.
-2. Pousser la branche et ouvrir `PR-BE-02`.
-3. Obtenir une CI GitHub distante verte au SHA exact, y compris le job PostgreSQL.
+2. [x] Pousser la branche et ouvrir `PR-BE-02`.
+3. Obtenir une CI GitHub distante verte au SHA final apres correction, y compris le job PostgreSQL.
 4. Donner la signature finale et décider du merge après vérification de la CI.
 5. Alors seulement marquer les tickets `BE-200-01` à `BE-200-12` comme `DONE` et passer la fiche tâche au statut final.
 
