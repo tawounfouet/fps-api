@@ -15,4 +15,4 @@ Ce dossier contient les preuves locales du lot `PR-BE-03 - Identité OIDC et RBA
 | `08_THOMAS_GO.md` | GO Thomas pour commit, push, PR et validation CI |
 | `M3_GATE_REPORT.md` | Verdict local, matrice des tickets et conditions restantes |
 
-Statut global: **GO_FOR_PUBLICATION**. Les preuves locales sont réunies, la revue AntiGravity est approuvée et le GO Thomas est consigné. Commit, push, ouverture de PR et validation de la CI sont en cours. Aucun merge, déploiement ni statut `DONE` n'est revendiqué.
+Statut global: **GO_FOR_PUBLICATION**. Les preuves locales sont réunies, la revue AntiGravity est approuvée et le GO Thomas est consigné. Le commit `bd20375` est créé; push, ouverture de PR et validation de la CI sont en cours. Aucun merge, déploiement ni statut `DONE` n'est revendiqué.

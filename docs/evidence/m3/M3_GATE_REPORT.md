@@ -6,7 +6,7 @@
 | PR | `PR-BE-03`, à ouvrir |
 | Branche | `feat/be-300-identity-oidc-rbac` |
 | Base | `main` @ `312ce8193d7ec8c83a31dfacfcc6c9b0e1eda75e` |
-| Commit | à consigner après commit |
+| Commit | `bd20375f930d1cd36e431f6225016c05c5e33377` |
 | Date | 2026-11-25 |
 | Owner | Opencode / `opencode/big-pickle` |
 | Revue requise | locale, agent IDE AntiGravity |
@@ -38,6 +38,7 @@
 - [x] Workflow CI mis à jour pour appliquer la migration avant le seed après les tests d'intégration.
 - [x] Revue locale AntiGravity: validée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md) (verdict: APPROVED).
 - [x] GO Thomas: consigné dans [08_THOMAS_GO.md](08_THOMAS_GO.md), portée limitée à commit, push, PR et CI.
+- [x] Commit local du lot M3 et de `openapi/openapi.json`: `bd20375f930d1cd36e431f6225016c05c5e33377`.
 - [ ] CI GitHub distante verte sur le SHA final.
 - [ ] Fournisseur OIDC nominal sélectionné et preuves de configuration associées.
 
