@@ -6,7 +6,7 @@
 | PR | `PR-BE-04`, à ouvrir |
 | Branche | `feat/be-400-contact-domain-durable-submission` |
 | Base | `main` @ `8ee9fa44a492f53e02b0a91a2296d48051a41517` |
-| Commit | à créer |
+| Commit | `17bece2c190f5d4008b27496ee42cd7f4d4c9364` |
 | Date | 2026-11-25 |
 | Owner | Opencode / `opencode/big-pickle` |
 | Revue requise | locale, agent IDE AntiGravity |

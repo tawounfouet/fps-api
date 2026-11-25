@@ -1,6 +1,6 @@
 # Qualité et tests locaux M4
 
-Commandes exécutées depuis `backends/fps-api`.
+Commandes exécutées depuis `backends/fps-api`. Commit du lot: `17bece2c190f5d4008b27496ee42cd7f4d4c9364`.
 
 ## Statique
 
