@@ -12,5 +12,6 @@ Ce dossier contient les preuves exécutables du lot `PR-BE-01 - Bootstrap, app f
 | `05_OPENAPI_EXPORT.md` | Export OpenAPI déterministe et frontières du schéma |
 | `06_NEGATIVE_CHECK.md` | Preuve que la suite peut échouer |
 | `07_M1_GATE_REPORT.md` | Verdict local et conditions avant `DONE` |
+| `08_AUTONOMOUS_REPO_IMPORT.md` | Vérification de l'import dans le dépôt autonome `fps-api` |
 
 Statut global: **LOCAL PASS - PR ET REVUE EN ATTENTE**.
