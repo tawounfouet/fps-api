@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     allowed_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     database_url: SecretStr | None = None
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
+    db_pool_timeout: int = 5
+    db_pool_recycle: int = 1800
+    db_connect_timeout: int = 2
 
     @field_validator("log_level")
     @classmethod
@@ -69,6 +74,41 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL must use postgresql or postgresql+psycopg")
         if parsed.hostname is None or parsed.username is None or parsed.password is None:
             raise ValueError("DATABASE_URL must include host, username and password")
+        return value
+
+    @field_validator("db_pool_size")
+    @classmethod
+    def validate_db_pool_size(cls, value: int) -> int:
+        if value < 1 or value > 50:
+            raise ValueError("DB_POOL_SIZE must be between 1 and 50")
+        return value
+
+    @field_validator("db_max_overflow")
+    @classmethod
+    def validate_db_max_overflow(cls, value: int) -> int:
+        if value < 0 or value > 50:
+            raise ValueError("DB_MAX_OVERFLOW must be between 0 and 50")
+        return value
+
+    @field_validator("db_pool_timeout")
+    @classmethod
+    def validate_db_pool_timeout(cls, value: int) -> int:
+        if value < 1 or value > 60:
+            raise ValueError("DB_POOL_TIMEOUT must be between 1 and 60")
+        return value
+
+    @field_validator("db_pool_recycle")
+    @classmethod
+    def validate_db_pool_recycle(cls, value: int) -> int:
+        if value < 30 or value > 86400:
+            raise ValueError("DB_POOL_RECYCLE must be between 30 and 86400")
+        return value
+
+    @field_validator("db_connect_timeout")
+    @classmethod
+    def validate_db_connect_timeout(cls, value: int) -> int:
+        if value < 1 or value > 30:
+            raise ValueError("DB_CONNECT_TIMEOUT must be between 1 and 30")
         return value
 
     @model_validator(mode="after")
