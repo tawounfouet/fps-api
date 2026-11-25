@@ -7,6 +7,10 @@
 | Date | 2026-11-25 |
 | Branche | `chore/be-m4-reserves-closure` |
 | Base | `main` @ `a883f2590a87c217b357567fee6eebe814401eee` |
+| PR de clôture | [#5](https://github.com/tawounfouet/fps-api/pull/5), `MERGED` |
+| Merge | `a26253f76cd9e8e8355dad4dd6d9385bbf2d2b2c` |
+| CI PR | run `45617829401`, 4 checks verts |
+| CI post-merge | run `45618069836`, 3 jobs verts |
 | Jalon | M4 - Domaine Contact, soumission durable et livraison |
 | Owner technique | OpenCode / `opencode/big-pickle` |
 | Décideur | Thomas Awounfouet |

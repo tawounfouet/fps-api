@@ -9,7 +9,9 @@
 | Commit | `17bece2c190f5d4008b27496ee42cd7f4d4c9364` |
 | Commit relu | `c82c930860cccff3c73927e59394ed8f071162ac` |
 | Merge | `a8fa0f1f9cf2079041a9ef90e521705a17050ec7` |
-| CI post-merge | run `45612341896`, 3 jobs verts |
+| PR de clôture | [#5](https://github.com/tawounfouet/fps-api/pull/5), `MERGED` |
+| Merge clôture | `a26253f76cd9e8e8355dad4dd6d9385bbf2d2b2c` |
+| CI post-merge | run `45612341896` puis run `45618069836`, 3 jobs verts |
 | Date | 2026-11-25 |
 | Owner | Opencode / `opencode/big-pickle` |
 | Revue requise | locale, agent IDE AntiGravity |
@@ -56,6 +58,7 @@
 - Worker CLI: statistiques JSON à zéro.
 - CI PR #4: 4 checks verts sur `7877b74`, run `45606555916`, puis 4 checks verts sur `eda22db`, run `45607083647`, puis 4 checks verts sur `c82c930`, run `45611345202`.
 - CI post-merge: run `45612341896` sur `a8fa0f1`, avec `quality`, `container-smoke` et `integration-postgres` verts.
+- CI clôture: run `45617829401` sur la PR #5, 4 checks verts; run `45618069836` sur `a26253f`, 3 jobs verts.
 
 Détails dans [04_LOCAL_QUALITY_AND_TESTS.md](04_LOCAL_QUALITY_AND_TESTS.md), [05_OPENAPI_AND_CONTRACT.md](05_OPENAPI_AND_CONTRACT.md), [06_RESERVES_AND_GATES.md](06_RESERVES_AND_GATES.md), [09_RESERVES_CLOSURE.md](09_RESERVES_CLOSURE.md) et [10_CLOSURE_REVIEW.md](10_CLOSURE_REVIEW.md).
 
