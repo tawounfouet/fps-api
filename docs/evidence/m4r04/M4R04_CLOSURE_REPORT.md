@@ -30,7 +30,7 @@
 - `.env.example` enrichi avec des placeholders non sensibles.
 - Tests locaux verts: 149 tests au total, dont les tests ajoutés pour M4-R04.
 - Smoke sandbox local vert via `scripts/smoke_email_sandbox.py`, sans réseau ni PII.
-- Smoke provider réel vert via `scripts/smoke_email_real.py`, avec envoi Resend, envoi SMTP et sonde IMAP.
+- Smoke provider réel vert via `scripts/smoke_email_real.py`, avec envoi Resend, envoi SMTP et sonde IMAP, et réception confirmée par l'utilisateur.
 - Script de smoke réel et preuves finales publiés via PR #7 mergée dans `main`.
 - Références du smoke réel: Resend `01a213fd-9eeb-7080-8301-354a1b1c6347`, SMTP `smtp_7e556436a1f873dd`, IMAP `OK/OK`.
 - Destinataire de test masqué dans la preuve; aucun secret ni donnée applicative réelle reproduit.

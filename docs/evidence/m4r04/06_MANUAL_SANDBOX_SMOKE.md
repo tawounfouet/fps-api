@@ -25,6 +25,24 @@ Le script exige les deux variables d'environnement ci-dessus. Il charge la confi
 {"imap_status": "OK/OK", "recipient_masked": "t***@gmail.com", "resend_provider": "resend", "resend_reference": "01a213fd-9eeb-7080-8301-354a1b1c6347", "smtp_provider": "smtp", "smtp_reference": "smtp_7e556436a1f873dd"}
 ```
 
+## Confirmation de réception côté utilisateur
+
+L'utilisateur a confirmé la réception du message de smoke le 2026-11-25 et a déclaré que l'image jointe contenait exactement le même texte que le message collé.
+
+| Champ | Valeur observée |
+|---|---|
+| Objet | `[FPS] Partenariat (fr)` |
+| Expéditeur | `automation@dev.awounfouet.com` |
+| Destinataire | Adresse sandbox autorisée, masquée dans cette preuve |
+| Nom | `Smoke Reel` |
+| Email applicatif | `smoke@example.test` |
+| Organisation | `FPS` |
+| Consentement RGPD | `oui` |
+| Correlation ID | `real-smoke-30b34ce1964d41e1afeafc4ab7595c6e` |
+| Contenu | `Smoke reel FPS sans donnee personnelle` |
+
+Cette confirmation établit la réception effective d'un des deux messages du smoke réel. Le destinataire complet n'est pas reproduit dans la preuve.
+
 ## Vérifications couvertes
 
 1. Envoi Resend via l'API réelle, avec référence provider sanitisée.
@@ -36,4 +54,4 @@ Le script exige les deux variables d'environnement ci-dessus. Il charge la confi
 
 ## Verdict
 
-Le smoke provider réel est vert. Le GO utilisateur et la rotation des identifiants exposés sont consignés. Aucune connexion IMAP n'a lu ni journalisé de contenu de boîte mail.
+Le smoke provider réel est vert. Le GO utilisateur, la rotation des identifiants exposés et la réception effective du message sont consignés. Aucune connexion IMAP n'a lu ni journalisé de contenu de boîte mail.
