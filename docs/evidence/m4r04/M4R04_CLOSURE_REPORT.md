@@ -5,16 +5,17 @@
 | Réserve | `M4-R04` |
 | Owner | Thomas Awounfouet |
 | Date du rapport | 2026-11-25 |
-| Verdict | **NOT CLOSED** |
-| Code local | Implémenté et vérifié |
+| Verdict | **CLOSED** |
+| Code | Publié sur `main` |
 | Décision provider | `M4R04-DEC-01` ratifiée |
+| Rotation des identifiants | Confirmée le 2026-11-25 |
 | Smoke local | Vert, transports factices |
-| Smoke provider réel | Bloqué par rotation des identifiants |
+| Smoke provider réel | **PASSED** le 2026-11-25T18:35:28Z |
 | Revue locale | `code-reviewer` APPROVED |
-| Commit | `58728d5` |
-| Pull request | [#6](https://github.com/tawounfouet/fps-api/pull/6), MERGED via `4701529` |
+| Commit fonctionnel | `58728d5` |
+| Merge | `4701529`, PR [#6](https://github.com/tawounfouet/fps-api/pull/6) |
 | CI dédiée | PR `45655851717` et post-merge `45656145100`, PASSED |
-| Gate associé | M11 |
+| Gate associé | M11, sans autorisation de production |
 
 ## Ce qui est accompli
 
@@ -27,21 +28,25 @@
 - `.env.example` enrichi avec des placeholders non sensibles.
 - Tests locaux verts: 149 tests au total, dont les tests ajoutés pour M4-R04.
 - Smoke sandbox local vert via `scripts/smoke_email_sandbox.py`, sans réseau ni PII.
-- Ruff, format, mypy, scan de secrets, OpenAPI et Alembic verts en local.
-- Revue locale `APPROVED`, PR #6 mergée et CI PR/post-merge vertes.
-- Preuves dédiées créées sous `docs/evidence/m4r04/` sans réécrire M4.
+- Smoke provider réel vert via `scripts/smoke_email_real.py`, avec envoi Resend, envoi SMTP et sonde IMAP.
+- Références du smoke réel: Resend `01a213fd-9eeb-7080-8301-354a1b1c6347`, SMTP `smtp_7e556436a1f873dd`, IMAP `OK/OK`.
+- Destinataire de test masqué dans la preuve; aucun secret ni donnée applicative réelle reproduit.
+- Ruff, format, mypy, scan de secrets, OpenAPI et Alembic verts en local et en CI.
+- Revue locale `APPROVED` après correction de tous les findings.
 
-## Ce qui bloque la clôture
+## Conditions de clôture
 
-1. Les identifiants exposés dans la conversation doivent être remplacés.
-2. Aucun smoke avec provider réel n'a été réalisé.
-3. La revue Thomas n'a pas été exécutée.
-4. Aucun GO explicite n'a été donné pour activer un provider réel.
+1. `M4R04-DEC-01` ratifiée par l'utilisateur.
+2. Identifiants exposés remplacés et rotation confirmée.
+3. Revue locale `code-reviewer` `APPROVED`.
+4. Code publié avec PR #6 mergée et CI PR/post-merge vertes.
+5. Smoke local sans réseau réussi.
+6. Smoke provider réel réussi avec GO explicite et preuve datée.
 
-## Décision proposée
+## Décision finale
 
-Conserver `M4-R04` en réserve ouverte et transférer le lot à la préparation M11. Ne pas modifier le verdict M4 `M4_RESERVES_CLOSED_EXCEPT_R04_REPORTED`.
+`M4-R04` est close. Le verdict M4 `M4_RESERVES_CLOSED_EXCEPT_R04_REPORTED` peut être lu comme `M4_RESERVES_CLOSED` avec cette preuve, sans réécrire les preuves M4 gelées.
 
-## Prochaine action
+## État final
 
-Obtenir la confirmation de rotation des identifiants exposés, puis réaliser le smoke provider réel avec GO explicite. Le code est publié sur `main`; seule la validation réelle avec provider externe reste bloquée.
+Aucune action bloquante ne reste sur ce lot. Tout passage en production, changement de provider par défaut ou activation hors sandbox reste une décision distincte rattachée au gate M11.

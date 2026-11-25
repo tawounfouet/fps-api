@@ -1,57 +1,39 @@
-# M4-R04 - Smoke sandbox
+# M4-R04 - Smoke provider réel
 
 | Champ | Valeur |
 |---|---|
-| Statut local | **PASS**, transports factices |
-| Statut provider réel | **NOT RUN / BLOCKED**, rotation requise |
-| Réseau réel | Aucun appel effectué |
-| Destinataire réel | Aucun |
-| PII réelle | Aucune |
-| Identifiants exposés | Non utilisés |
+| Statut | **PASSED** |
+| Date UTC | `2026-11-25T18:35:28Z` |
+| GO utilisateur | Obtenu le 2026-11-25 |
+| Rotation des identifiants | Confirmée par l'utilisateur le 2026-11-25 |
+| Destinataire de test | Adresse sandbox autorisée, masquée dans cette preuve |
+| Réseau réel | 2 envois provider et 1 sonde IMAP |
+| Données applicatives réelles | Aucune |
+| Secrets réels dans la preuve | Aucun |
 
 ## Commande exécutée
 
-```text
-uv run python scripts/smoke_email_sandbox.py
-{"imap_status": "OK/OK", "network_calls": 0, "resend_reference": "msg_sandbox_001", "smtp_reference": "smtp_46f343b5bb607a2b"}
+```sh
+FPS_REAL_EMAIL_SMOKE_CONFIRMED=1 FPS_EMAIL_SMOKE_TO='<adresse sandbox autorisee>' uv run python scripts/smoke_email_real.py
 ```
 
-Le script exécute trois chemins avec transports injectés:
+Le script exige les deux variables d'environnement ci-dessus. Il charge la configuration depuis l'environnement de l'application sans lire ni afficher les secrets.
 
-1. `ResendEmailDeliveryPort` avec `httpx.MockTransport`.
-2. `SmtpEmailDeliveryPort` avec `SandboxSmtpSender`.
-3. `ImapInboxProbePort` avec `SandboxImapClient`.
+## Résultat
 
-## Préconditions pour un smoke provider réel
+```json
+{"imap_status": "OK/OK", "recipient_masked": "t***@gmail.com", "resend_provider": "resend", "resend_reference": "01a213fd-9eeb-7080-8301-354a1b1c6347", "smtp_provider": "smtp", "smtp_reference": "smtp_7e556436a1f873dd"}
+```
 
-1. `M4R04-DEC-01` ratifiée, obtenue le 2026-11-25.
-2. Rotation des identifiants SMTP, IMAP et Resend affichés dans la conversation.
-3. Clé Resend de sandbox isolée, distincte de tout environnement partagé.
-4. Domaine d'expéditeur et destinataires de test contrôlés.
-5. Revue de code et CI vertes sur la branche M4-R04.
-6. GO explicite de Thomas Awounfouet avant tout envoi réel.
+## Vérifications couvertes
 
-## Scénario réel prévu
+1. Envoi Resend via l'API réelle, avec référence provider sanitisée.
+2. Envoi SMTP via le serveur configuré, avec référence locale sans PII.
+3. Sonde IMAP en lecture seule du dossier `INBOX`, avec statut `OK/OK`.
+4. Aucune donnée applicative réelle dans le message.
+5. Aucun secret ni destinataire complet reproduit dans la preuve.
+6. Fermeture propre des ports Resend et SMTP.
 
-1. Démarrer le worker avec `CONTACT_EMAIL_PROVIDER_MODE=resend` et une base de test isolée.
-2. Injecter une soumission de test synthétique avec identifiant de corrélation unique.
-3. Vérifier que l'enregistrement est persisté avant tout appel provider.
-4. Vérifier que le claim est commité avant l'appel HTTP.
-5. Observer un seul appel provider pour une même clé d'idempotence.
-6. Vérifier le reçu sans PII ni secret.
-7. Simuler un `429` ou `503` avec un transport factice, puis confirmer le retry borné.
-8. Si autorisé, envoyer un email sandbox à une adresse de test et vérifier réception sans contenu client réel.
-9. Arrêter le worker et confirmer la fermeture propre du client HTTP.
+## Verdict
 
-## Critères de réussite
-
-- Aucun secret ni PII dans les logs, exceptions ou reçus.
-- Aucune écriture non durable avant envoi.
-- Aucun envoi réel en dehors du sandbox autorisé.
-- Idempotence respectée.
-- Erreurs transitoires retryables et erreurs permanentes non retryables.
-- GO et preuve datée signés par Thomas avant toute extension à un environnement supérieur.
-
-## Verdict courant
-
-Le smoke local avec transports factices est vert. Le smoke avec un provider réel reste bloqué par la rotation des identifiants exposés et doit être exécuté avant activation réelle.
+Le smoke provider réel est vert. Le GO utilisateur et la rotation des identifiants exposés sont consignés. Aucune connexion IMAP n'a lu ni journalisé de contenu de boîte mail.
