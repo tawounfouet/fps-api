@@ -10,6 +10,11 @@ from fps_platform.modules.audit.application.recorder import AuditRecorder
 from fps_platform.modules.audit.infrastructure.persistence.repository import (
     SqlAlchemyAuditEventRepository,
 )
+from fps_platform.modules.contact.infrastructure.persistence.repository import (
+    SqlAlchemyContactDeliveryRepository,
+    SqlAlchemyContactIdempotencyRepository,
+    SqlAlchemyContactSubmissionRepository,
+)
 from fps_platform.modules.identity.infrastructure.persistence.guard import PostgresSuperAdminGuard
 from fps_platform.modules.identity.infrastructure.persistence.repository import (
     SqlAlchemyRoleRepository,
@@ -47,6 +52,18 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
     @property
     def outbox_events(self) -> SqlAlchemyOutboxEventRepository:
         return SqlAlchemyOutboxEventRepository(self.session)
+
+    @property
+    def contacts(self) -> SqlAlchemyContactSubmissionRepository:
+        return SqlAlchemyContactSubmissionRepository(self.session)
+
+    @property
+    def deliveries(self) -> SqlAlchemyContactDeliveryRepository:
+        return SqlAlchemyContactDeliveryRepository(self.session)
+
+    @property
+    def idempotency_keys(self) -> SqlAlchemyContactIdempotencyRepository:
+        return SqlAlchemyContactIdempotencyRepository(self.session, self.clock)
 
     @property
     def users(self) -> SqlAlchemyUserRepository:

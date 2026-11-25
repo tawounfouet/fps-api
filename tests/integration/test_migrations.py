@@ -8,7 +8,7 @@ from sqlalchemy.engine import Engine
 from alembic import command
 from tests.fixtures.persistence_probe import ProbeBase
 
-EXPECTED_HEAD = "9c4f6a1d8b72"
+EXPECTED_HEAD = "c8cfc1256c53"
 pytestmark = pytest.mark.integration
 
 
