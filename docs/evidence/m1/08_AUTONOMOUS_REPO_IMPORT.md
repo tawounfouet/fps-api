@@ -41,4 +41,4 @@ Les documents M0 conservent les références historiques à l'ancien dépôt com
 
 ## Verdict
 
-Le dépôt autonome est `LOCAL PASS` et prêt pour l'ouverture de `PR-BE-01`. La revue `AntiGravity`, la CI distante et la validation `Thomas` restent requises avant tout `DONE`.
+Le dépôt autonome est `LOCAL PASS` et `PR-BE-01` est ouverte. La CI distante est verte sur le run `45534294240`. La revue locale `AntiGravity` et la validation `Thomas` restent requises avant tout `DONE`; aucune demande de revue GitHub n'est nécessaire car AntiGravity est un agent IDE, pas un compte GitHub.

@@ -8,13 +8,13 @@
 | Base | `main` @ `fa9548c`, historique propre sans remote externe |
 | Date | 2026-11-25 |
 | Owner | Opencode |
-| Reviewer requis | AntiGravity |
+| Revue requise | locale, agent IDE AntiGravity |
 | Décideur | Thomas |
 | Verdict local | **LOCAL PASS** |
-| Verdict PR | **READY_FOR_REVIEW** |
+| Verdict PR | **READY_FOR_LOCAL_REVIEW** |
 | Dépôt autonome | https://github.com/tawounfouet/fps-api |
-| HEAD vérifié | `4b95cb8` avant ajout de ce rapport |
-| CI distante | à exécuter sur la PR du dépôt autonome |
+| HEAD vérifié | `df125be` avant ajustement du mode de revue |
+| CI distante | `45534294240`: quality, postgres-smoke, container-smoke et GitGuardian `pass` |
 | Statut `DONE` | **NON** |
 
 ## Critères vérifiés
@@ -43,16 +43,16 @@
 - [x] Smoke Compose avec PostgreSQL 17: ready 200.
 - [x] Import vérifié localement dans le dépôt autonome: ruff, format, mypy, 26 tests, couverture 87%, secrets et OpenAPI.
 - [x] Build Docker non-root et smokes conteneur et Compose avec PostgreSQL 17 réussis dans le dépôt autonome.
-- [ ] CI GitHub Actions distante à recueillir sur la PR du dépôt autonome.
-- [ ] Revue AntiGravity: à recueillir après ajout comme collaborateur du dépôt `fps-api`.
+- [x] CI GitHub Actions distante verte sur le run `45534294240`.
+- [x] Aucune demande de revue GitHub requise: AntiGravity est un agent IDE, pas un compte GitHub.
+- [ ] Revue locale AntiGravity: à consigner dans `09_LOCAL_REVIEW.md`.
 - [ ] Validation Thomas: à recueillir avant `DONE`.
 
 ## Conditions restantes
 
-1. Pousser `main` et `feat/fps-backend-bootstrap-m1`, puis ouvrir `PR-BE-01` dans `tawounfouet/fps-api`.
-2. Faire ajouter `AntiGravity` comme collaborateur du dépôt autonome, puis demander la revue formelle.
-3. Recueillir la CI distante verte et traiter les commentaires de revue.
-4. Recueillir la validation Thomas avant tout `DONE`.
-5. Ne marquer les tickets `BE-100-01` à `BE-100-12` comme `DONE` qu'après revue et validation finale.
+1. Consigner la revue locale AntiGravity dans `09_LOCAL_REVIEW.md`, avec verdict et corrections éventuelles.
+2. Recueillir la validation Thomas avant tout `DONE`.
+3. Ne marquer les tickets `BE-100-01` à `BE-100-12` comme `DONE` qu'après revue locale et validation finale.
+4. Laisser la CI GitHub et GitGuardian comme seuls gates distants requis sur `PR-BE-01`.
 
 Les tickets M2 et suivants restent non livrés. Aucun endpoint métier, aucune migration, aucun provider externe et aucun déploiement ne sont revendiqués par ce lot.
