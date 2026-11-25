@@ -65,6 +65,7 @@ jobs:
       - run: uv run alembic check
       - run: uv run python scripts/db_diagnostics.py
       - run: uv run pytest -m integration -q
+      - run: uv run alembic upgrade head
       - run: uv run python scripts/seed.py
 
   container-smoke:

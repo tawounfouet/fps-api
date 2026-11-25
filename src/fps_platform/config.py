@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_LOG_LEVELS = frozenset({"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"})
 DATABASE_SCHEMES = frozenset({"postgresql", "postgresql+psycopg"})
+OIDC_ALGORITHMS = frozenset({"RS256", "ES256", "PS256"})
 
 
 class Environment(StrEnum):
@@ -40,6 +41,13 @@ class Settings(BaseSettings):
     db_pool_timeout: int = 5
     db_pool_recycle: int = 1800
     db_connect_timeout: int = 2
+    oidc_enabled: bool = False
+    oidc_issuer: str | None = None
+    oidc_audience: str | None = None
+    oidc_jwks_url: str | None = None
+    oidc_algorithms: list[str] = Field(default_factory=lambda: ["RS256"])
+    oidc_jwks_cache_ttl_seconds: int = 300
+    oidc_clock_leeway_seconds: int = 30
 
     @field_validator("log_level")
     @classmethod
@@ -110,6 +118,52 @@ class Settings(BaseSettings):
         if value < 1 or value > 30:
             raise ValueError("DB_CONNECT_TIMEOUT must be between 1 and 30")
         return value
+
+    @field_validator("oidc_algorithms")
+    @classmethod
+    def validate_oidc_algorithms(cls, values: list[str]) -> list[str]:
+        if not values:
+            raise ValueError("OIDC_ALGORITHMS must contain at least one algorithm")
+        normalized = [value.strip().upper() for value in values]
+        unsupported = [value for value in normalized if value not in OIDC_ALGORITHMS]
+        if unsupported or len(set(normalized)) != len(normalized):
+            raise ValueError("OIDC_ALGORITHMS contains unsupported or duplicate algorithms")
+        return normalized
+
+    @field_validator("oidc_jwks_cache_ttl_seconds")
+    @classmethod
+    def validate_oidc_jwks_cache_ttl(cls, value: int) -> int:
+        if value < 30 or value > 86400:
+            raise ValueError("OIDC_JWKS_CACHE_TTL_SECONDS must be between 30 and 86400")
+        return value
+
+    @field_validator("oidc_clock_leeway_seconds")
+    @classmethod
+    def validate_oidc_clock_leeway(cls, value: int) -> int:
+        if value < 0 or value > 120:
+            raise ValueError("OIDC_CLOCK_LEEWAY_SECONDS must be between 0 and 120")
+        return value
+
+    @model_validator(mode="after")
+    def enforce_oidc_policy(self) -> Settings:
+        if not self.oidc_enabled:
+            return self
+        if not self.oidc_issuer or not self.oidc_audience or not self.oidc_jwks_url:
+            raise ValueError(
+                "OIDC_ISSUER, OIDC_AUDIENCE and OIDC_JWKS_URL are required when OIDC is enabled"
+            )
+        for value, label in (
+            (self.oidc_issuer, "OIDC_ISSUER"),
+            (self.oidc_jwks_url, "OIDC_JWKS_URL"),
+        ):
+            parsed = urlparse(value)
+            if parsed.scheme not in {"http", "https"} or parsed.netloc == "":
+                raise ValueError(f"{label} must be an absolute http or https URL")
+            if self.environment is Environment.PRODUCTION and parsed.scheme != "https":
+                raise ValueError(f"{label} must use https in production")
+        if not self.oidc_audience or len(self.oidc_audience) > 256:
+            raise ValueError("OIDC_AUDIENCE must contain between 1 and 256 characters")
+        return self
 
     @model_validator(mode="after")
     def enforce_production_policy(self) -> Settings:

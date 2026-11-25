@@ -8,7 +8,7 @@ from sqlalchemy.engine import Engine
 from alembic import command
 from tests.fixtures.persistence_probe import ProbeBase
 
-EXPECTED_HEAD = "af1fb0f824bc"
+EXPECTED_HEAD = "9c4f6a1d8b72"
 pytestmark = pytest.mark.integration
 
 
@@ -25,6 +25,10 @@ def test_constraint_names_are_stable(engine: Engine) -> None:
     audit_checks = {item["name"] for item in inspector.get_check_constraints("audit_events")}
     outbox_checks = {item["name"] for item in inspector.get_check_constraints("outbox_events")}
     outbox_unique = {item["name"] for item in inspector.get_unique_constraints("outbox_events")}
+    user_checks = {item["name"] for item in inspector.get_check_constraints("users")}
+    user_unique = {item["name"] for item in inspector.get_unique_constraints("users")}
+    assert "ck_users_version_positive" in user_checks
+    assert "uq_users_external_identity" in user_unique
     assert "ck_audit_events_actor_type_non_empty" in audit_checks
     assert "ck_audit_events_correlation_id_non_empty" in audit_checks
     assert "ck_outbox_events_attempt_count_bounded" in outbox_checks

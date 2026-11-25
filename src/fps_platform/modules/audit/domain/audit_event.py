@@ -16,6 +16,12 @@ ALLOWED_METADATA_KEYS: dict[AuditAction, frozenset[str]] = {
     AuditAction.PERSISTENCE_PROBE_UPDATED: frozenset({"from_version", "to_version"}),
     AuditAction.CONTACT_DELIVERY_REQUESTED: frozenset({"template_code", "recipient_group_code"}),
     AuditAction.CONTENT_REVALIDATION_REQUESTED: frozenset({"resource_type", "locale"}),
+    AuditAction.USER_CREATED: frozenset({"created_by"}),
+    AuditAction.ROLE_ASSIGNED: frozenset({"role_code", "assigned_by"}),
+    AuditAction.ROLE_REMOVED: frozenset({"role_code", "removed_by"}),
+    AuditAction.USER_SUSPENDED: frozenset({"reason_code"}),
+    AuditAction.USER_ACTIVATED: frozenset({"reason_code"}),
+    AuditAction.USER_DISABLED: frozenset({"reason_code"}),
 }
 FORBIDDEN_METADATA_TERMS = (
     "authorization",

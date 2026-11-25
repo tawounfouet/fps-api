@@ -68,6 +68,9 @@ def clean_tables(engine: Engine) -> None:
     tables = (
         "outbox_events",
         "audit_events",
+        "user_roles",
+        "users",
+        "roles",
         "persistence_probes",
         "persistence_probe_parents",
     )

@@ -63,3 +63,32 @@ def test_database_url_is_masked() -> None:
 def test_invalid_database_url_is_rejected() -> None:
     with pytest.raises(ValidationError, match="DATABASE_URL"):
         Settings(_env_file=None, database_url="sqlite:///local.db")
+
+
+def test_oidc_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+    assert settings.oidc_enabled is False
+    assert settings.oidc_algorithms == ["RS256"]
+
+
+def test_oidc_requires_issuer_audience_and_jwks() -> None:
+    with pytest.raises(ValidationError, match="OIDC_ISSUER"):
+        Settings(_env_file=None, oidc_enabled=True)
+
+
+def test_oidc_rejects_unsupported_algorithm() -> None:
+    with pytest.raises(ValidationError, match="OIDC_ALGORITHMS"):
+        Settings(_env_file=None, oidc_algorithms=["HS256"])
+
+
+def test_production_oidc_requires_https() -> None:
+    with pytest.raises(ValidationError, match="OIDC_JWKS_URL"):
+        Settings(
+            _env_file=None,
+            environment=Environment.PRODUCTION,
+            allowed_origins=["https://example.test"],
+            oidc_enabled=True,
+            oidc_issuer="https://idp.example.test",
+            oidc_audience="fps-api",
+            oidc_jwks_url="http://idp.example.test/jwks",
+        )
