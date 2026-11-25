@@ -11,11 +11,11 @@
 | Revue requise | locale, agent IDE AntiGravity |
 | Décideur | Thomas |
 | Verdict local | **LOCAL PASS** |
-| Verdict PR | **READY_FOR_LOCAL_REVIEW** |
+| Verdict PR | **READY_FOR_THOMAS_VALIDATION** |
 | Dépôt autonome | https://github.com/tawounfouet/fps-api |
-| HEAD vérifié | `df125be` avant ajustement du mode de revue |
-| CI distante | `45534294240`: quality, postgres-smoke, container-smoke et GitGuardian `pass` |
-| Statut `DONE` | **NON** |
+| HEAD vérifié | `c0d634f` après revue locale AntiGravity |
+| CI distante | `45534875446`: quality, postgres-smoke, container-smoke et GitGuardian `pass` |
+| Statut `DONE` | **NON** (en attente de validation Thomas) |
 
 ## Critères vérifiés
 
@@ -43,16 +43,16 @@
 - [x] Smoke Compose avec PostgreSQL 17: ready 200.
 - [x] Import vérifié localement dans le dépôt autonome: ruff, format, mypy, 26 tests, couverture 87%, secrets et OpenAPI.
 - [x] Build Docker non-root et smokes conteneur et Compose avec PostgreSQL 17 réussis dans le dépôt autonome.
-- [x] CI GitHub Actions distante verte sur le run `45534294240`.
+- [x] CI GitHub Actions distante verte sur le run `45534875446`.
 - [x] Aucune demande de revue GitHub requise: AntiGravity est un agent IDE, pas un compte GitHub.
-- [ ] Revue locale AntiGravity: à consigner dans `09_LOCAL_REVIEW.md`.
+- [x] Revue locale AntiGravity: consignée et validée dans `09_LOCAL_REVIEW.md` (verdict: APPROVED).
 - [ ] Validation Thomas: à recueillir avant `DONE`.
 
 ## Conditions restantes
 
-1. Consigner la revue locale AntiGravity dans `09_LOCAL_REVIEW.md`, avec verdict et corrections éventuelles.
+1. Revue locale AntiGravity consignée dans `09_LOCAL_REVIEW.md` (verdict: APPROVED).
 2. Recueillir la validation Thomas avant tout `DONE`.
-3. Ne marquer les tickets `BE-100-01` à `BE-100-12` comme `DONE` qu'après revue locale et validation finale.
+3. Ne marquer les tickets `BE-100-01` à `BE-100-12` comme `DONE` qu'après validation finale.
 4. Laisser la CI GitHub et GitGuardian comme seuls gates distants requis sur `PR-BE-01`.
 
 Les tickets M2 et suivants restent non livrés. Aucun endpoint métier, aucune migration, aucun provider externe et aucun déploiement ne sont revendiqués par ce lot.
