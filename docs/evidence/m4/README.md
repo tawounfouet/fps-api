@@ -15,4 +15,4 @@ Ce dossier contient les preuves locales du lot `PR-BE-04 - Domaine Contact, soum
 | `08_THOMAS_GO.md` | GO Thomas pour le merge de la PR #4 |
 | `M4_GATE_REPORT.md` | Verdict local, critères vérifiés et conditions restantes |
 
-Statut global: **GO_FOR_M4_MERGE**. L'implémentation locale, les preuves, le commit, le push, la [PR #4](https://github.com/tawounfouet/fps-api/pull/4), la CI distante verte, la revue AntiGravity (APPROVED) et le GO Thomas sont en place. Le merge de la PR #4 sur `main` reste à exécuter. Aucun déploiement ni utilisation de PII réelle n'est autorisé.
+Statut global: **M4_MERGED_ON_MAIN**. La [PR #4](https://github.com/tawounfouet/fps-api/pull/4) est mergée sur `main` via `a8fa0f1`, avec CI post-merge verte sur le run `45612341896`. La revue AntiGravity est `APPROVED` et le GO Thomas est consigné dans `08_THOMAS_GO.md`. Le jalon est clôturé sous réserve de `M4-R01` à `M4-R05`. Aucun déploiement ni utilisation de PII réelle n'est autorisé.

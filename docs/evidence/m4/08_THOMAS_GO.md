@@ -20,3 +20,14 @@ La séquence autorisée est:
 5. Basculer la tâche M4 et `tasks/backend/TODOS.md` au statut `Terminé` avec le SHA de merge.
 
 Ce document autorise le merge et la clôture documentaire du jalon M4. Il n'autorise ni déploiement, ni appel email réel, ni utilisation de PII réelles, ni bascule du frontend Vite avant le jalon M10.
+
+## Exécution
+
+| Champ | Valeur |
+|---|---|
+| Merge | effectué |
+| Date du merge | 2026-11-25T12:17:27Z |
+| Commit de merge | `a8fa0f1f9cf2079041a9ef90e521705a17050ec7` |
+| État PR #4 | `MERGED` |
+| CI post-merge | run `45612341896`, 3 jobs verts |
+| Clôture | jalon M4 marqué `DONE` sous réserve de `M4-R01` à `M4-R05` |

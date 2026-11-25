@@ -16,7 +16,10 @@
 - GO Thomas consigné dans [08_THOMAS_GO.md](08_THOMAS_GO.md).
 - Commit, push et [PR #4](https://github.com/tawounfouet/fps-api/pull/4) effectués.
 - CI GitHub distante verte sur `c82c930`, run `45611345202`, avec 4 checks verts.
-- Merge autorisé, mais aucun statut `DONE` ni déploiement n'est encore revendiqué.
+- Merge effectué sur `main` via le commit `a8fa0f1f9cf2079041a9ef90e521705a17050ec7`, PR #4 au statut `MERGED`.
+- CI post-merge verte sur le run `45612341896`, avec `quality`, `container-smoke` et `integration-postgres` verts.
+- Jalon clôturé sous réserve de `M4-R01` à `M4-R05`.
+- Aucun déploiement ni utilisation de PII réelle n'est autorisé.
 
 ## Obligations légales et confinement
 
@@ -31,4 +34,4 @@
 1. [x] Consigner la revue AntiGravity locale et lever ses commentaires.
 2. [x] Obtenir le GO Thomas pour merge.
 3. [ ] Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance.
-4. [ ] Merger la PR #4 sur `main`, puis marquer les tickets `DONE` sans autoriser de déploiement ni de bascule frontend.
+4. [x] Merger la PR #4 sur `main` et marquer le jalon `DONE` sans autoriser de déploiement ni de bascule frontend.
