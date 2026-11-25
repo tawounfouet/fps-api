@@ -1,0 +1,81 @@
+name: backend-ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv python pin 3.13
+      - run: uv sync --frozen --all-groups
+      - run: uv run ruff check .
+      - run: uv run ruff format --check src tests scripts
+      - run: uv run mypy src tests scripts
+      - run: uv run pytest --cov=fps_platform --cov-report=term-missing --cov-report=xml -q
+      - run: uv run python scripts/check_secrets.py
+      - run: uv run python scripts/export_openapi.py
+      - run: git diff --exit-code -- openapi/openapi.json
+
+  postgres-smoke:
+    needs: quality
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fps
+          POSTGRES_DB: fps
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U fps -d fps"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --frozen --all-groups
+      - run: uv run python -c "from sqlalchemy import create_engine, text; engine = create_engine('postgresql+psycopg://fps@127.0.0.1:5432/fps'); print(engine.connect().execute(text('SELECT 1')).scalar_one())"
+
+  container-smoke:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --pull -t fps-platform:ci .
+      - run: |
+          docker run --rm -d --name fps-ci -p 8000:8000 \
+            -e ENVIRONMENT=test \
+            -e DOCS_ENABLED=true \
+            -e ALLOWED_ORIGINS='["http://localhost:3000"]' \
+            fps-platform:ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health/live >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8000/health/live
+          curl -fsS http://127.0.0.1:8000/version
+          docker stop fps-ci
