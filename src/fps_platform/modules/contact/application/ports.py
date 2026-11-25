@@ -74,6 +74,7 @@ class ContactRateLimiter(Protocol):
 @dataclass(frozen=True, slots=True)
 class ContactEmailMessage:
     submission_id: UUID
+    idempotency_key: str
     template_code: str
     recipient_group_code: str
     locale: ContactLocale

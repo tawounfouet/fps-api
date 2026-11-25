@@ -38,7 +38,7 @@ def resolve_client_ip(request: Request, settings: Settings) -> str:
         if forwarded:
             candidates = [value.strip() for value in forwarded.split(",") if value.strip()]
             if candidates:
-                index = max(0, len(candidates) - trusted_proxies - 1)
+                index = max(0, len(candidates) - trusted_proxies)
                 return candidates[index]
     return request.client.host if request.client is not None else "unknown"
 

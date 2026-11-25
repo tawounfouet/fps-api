@@ -95,12 +95,13 @@ class SqlAlchemyOutboxEventRepository(OutboxEventRepository):
         result = cast(CursorResult[Any], self._session.execute(statement))
         return result.rowcount == 1
 
-    def complete(self, *, event_id: UUID, completed_at: datetime) -> None:
+    def complete(self, *, event_id: UUID, lease_token: UUID, completed_at: datetime) -> bool:
         statement = (
             update(OutboxEventRecord)
             .where(
                 OutboxEventRecord.id == event_id,
                 OutboxEventRecord.status == OutboxStatus.LEASED.value,
+                OutboxEventRecord.lease_token == lease_token,
             )
             .values(
                 status=OutboxStatus.COMPLETED.value,
@@ -110,20 +111,23 @@ class SqlAlchemyOutboxEventRepository(OutboxEventRepository):
                 locked_by=None,
             )
         )
-        cast(CursorResult[Any], self._session.execute(statement))
+        result = cast(CursorResult[Any], self._session.execute(statement))
+        return result.rowcount == 1
 
     def mark_retry_wait(
         self,
         *,
         event_id: UUID,
+        lease_token: UUID,
         available_at: datetime,
         last_error_code: str,
-    ) -> None:
+    ) -> bool:
         statement = (
             update(OutboxEventRecord)
             .where(
                 OutboxEventRecord.id == event_id,
                 OutboxEventRecord.status == OutboxStatus.LEASED.value,
+                OutboxEventRecord.lease_token == lease_token,
             )
             .values(
                 status=OutboxStatus.RETRY_WAIT.value,
@@ -134,14 +138,16 @@ class SqlAlchemyOutboxEventRepository(OutboxEventRepository):
                 locked_by=None,
             )
         )
-        cast(CursorResult[Any], self._session.execute(statement))
+        result = cast(CursorResult[Any], self._session.execute(statement))
+        return result.rowcount == 1
 
-    def mark_dead(self, *, event_id: UUID, last_error_code: str) -> None:
+    def mark_dead(self, *, event_id: UUID, lease_token: UUID, last_error_code: str) -> bool:
         statement = (
             update(OutboxEventRecord)
             .where(
                 OutboxEventRecord.id == event_id,
                 OutboxEventRecord.status == OutboxStatus.LEASED.value,
+                OutboxEventRecord.lease_token == lease_token,
             )
             .values(
                 status=OutboxStatus.DEAD.value,
@@ -151,7 +157,8 @@ class SqlAlchemyOutboxEventRepository(OutboxEventRepository):
                 locked_by=None,
             )
         )
-        cast(CursorResult[Any], self._session.execute(statement))
+        result = cast(CursorResult[Any], self._session.execute(statement))
+        return result.rowcount == 1
 
     def release_expired(self, *, now: datetime, limit: int = 20) -> int:
         self._validate_limit(limit)

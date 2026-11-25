@@ -10,6 +10,7 @@ from fps_platform.modules.contact.application.ports import (
     ContactEmailMessage,
     ContactUnitOfWork,
     EmailDeliveryPort,
+    EmailDeliveryReceipt,
 )
 from fps_platform.modules.contact.domain.entities import ContactDelivery, ContactSubmission
 from fps_platform.modules.contact.domain.enums import ContactDeliveryStatus
@@ -70,63 +71,130 @@ class ContactDeliveryWorker:
         return stats
 
     def _process_event(self, event: OutboxEvent, stats: ContactDeliveryWorkerStats) -> None:
-        now = self._clock.now()
+        claimed_at = self._clock.now()
         lease_token = uuid4()
         with self._uow_factory() as uow:
             claimed = uow.outbox_events.claim(
                 event_id=event.id,
                 lease_token=lease_token,
-                leased_until=now + timedelta(seconds=self._lease_seconds),
+                leased_until=claimed_at + timedelta(seconds=self._lease_seconds),
                 locked_by=self._worker_id,
-                now=now,
+                now=claimed_at,
             )
             if not claimed:
                 stats.skipped += 1
                 return
-            stats.claimed += 1
+            uow.commit()
+        stats.claimed += 1
+
+        with self._uow_factory() as uow:
+            now = self._clock.now()
             current_event = uow.outbox_events.get(event.id) or event
-            delivery_id = self._payload_uuid(current_event, "delivery_intent_id")
-            delivery = uow.deliveries.get(delivery_id)
+            intent_id = self._payload_uuid(current_event, "delivery_intent_id")
+            delivery = uow.deliveries.get(intent_id)
             if delivery is None:
-                uow.outbox_events.mark_dead(event_id=event.id, last_error_code="DELIVERY_NOT_FOUND")
-                stats.dead += 1
+                if uow.outbox_events.mark_dead(
+                    event_id=event.id,
+                    lease_token=lease_token,
+                    last_error_code="DELIVERY_NOT_FOUND",
+                ):
+                    stats.dead += 1
+                else:
+                    stats.skipped += 1
                 uow.commit()
                 return
             submission = uow.contacts.get(delivery.submission_id)
             if submission is None:
-                uow.outbox_events.mark_dead(event_id=event.id, last_error_code="CONTACT_NOT_FOUND")
-                stats.dead += 1
+                if uow.outbox_events.mark_dead(
+                    event_id=event.id,
+                    lease_token=lease_token,
+                    last_error_code="CONTACT_NOT_FOUND",
+                ):
+                    stats.dead += 1
+                else:
+                    stats.skipped += 1
                 uow.commit()
                 return
             if delivery.status is ContactDeliveryStatus.SUCCEEDED:
-                uow.outbox_events.complete(event_id=event.id, completed_at=now)
+                if uow.outbox_events.complete(
+                    event_id=event.id, lease_token=lease_token, completed_at=now
+                ):
+                    stats.succeeded += 1
+                else:
+                    stats.skipped += 1
                 uow.commit()
                 return
             if delivery.status is ContactDeliveryStatus.IN_PROGRESS:
-                delivery.mark_failed(now, "STALE_IN_PROGRESS")
-                uow.deliveries.save(delivery)
-                self._record_failure_audit(uow, delivery, "STALE_IN_PROGRESS")
-                self._apply_failure(uow, current_event, delivery, "STALE_IN_PROGRESS", stats, now)
+                stale_now = self._clock.now()
+                fenced = self._apply_failure(
+                    uow,
+                    current_event,
+                    delivery,
+                    "STALE_IN_PROGRESS",
+                    stats,
+                    stale_now,
+                    lease_token=lease_token,
+                )
+                if fenced:
+                    delivery.mark_failed(stale_now, "STALE_IN_PROGRESS")
+                    uow.deliveries.save(delivery)
+                    self._record_failure_audit(uow, delivery, "STALE_IN_PROGRESS")
                 uow.commit()
                 return
             if delivery.status is ContactDeliveryStatus.FAILED:
                 delivery = self._new_attempt(uow, delivery, now)
-            try:
-                delivery.mark_in_progress(now)
-                uow.deliveries.save(delivery)
-                receipt = self._email_port.send(self._message(submission))
-            except PermanentContactDeliveryError as exc:
-                self._fail(
-                    uow, current_event, delivery, type(exc).__name__, stats, now, permanent=True
-                )
+            delivery.mark_in_progress(now)
+            uow.deliveries.save(delivery)
+            message = self._message(submission, f"contact-delivery-{intent_id}")
+            uow.commit()
+
+        try:
+            receipt = self._email_port.send(message)
+        except PermanentContactDeliveryError as exc:
+            self._finalize_failure(
+                event.id,
+                delivery.id,
+                lease_token,
+                type(exc).__name__,
+                stats,
+                permanent=True,
+            )
+            return
+        except RetryableContactDeliveryError as exc:
+            self._finalize_failure(event.id, delivery.id, lease_token, type(exc).__name__, stats)
+            return
+        except Exception as exc:
+            self._finalize_failure(event.id, delivery.id, lease_token, type(exc).__name__, stats)
+            return
+        self._finalize_success(event.id, delivery.id, lease_token, receipt, stats)
+
+    def _finalize_success(
+        self,
+        event_id: UUID,
+        delivery_id: UUID,
+        lease_token: UUID,
+        receipt: EmailDeliveryReceipt,
+        stats: ContactDeliveryWorkerStats,
+    ) -> None:
+        now = self._clock.now()
+        with self._uow_factory() as uow:
+            event = uow.outbox_events.get(event_id)
+            delivery = uow.deliveries.get(delivery_id)
+            if event is None or delivery is None:
+                if event is not None:
+                    self._mark_dead(uow, event_id, lease_token, "DELIVERY_NOT_FOUND", stats)
+                else:
+                    stats.dead += 1
                 uow.commit()
                 return
-            except RetryableContactDeliveryError as exc:
-                self._fail(uow, current_event, delivery, type(exc).__name__, stats, now)
+            if delivery.status is not ContactDeliveryStatus.IN_PROGRESS:
+                stats.skipped += 1
                 uow.commit()
                 return
-            except Exception as exc:
-                self._fail(uow, current_event, delivery, type(exc).__name__, stats, now)
+            if not uow.outbox_events.complete(
+                event_id=event_id, lease_token=lease_token, completed_at=now
+            ):
+                stats.skipped += 1
                 uow.commit()
                 return
             delivery.mark_succeeded(now, receipt.provider_reference)
@@ -134,15 +202,52 @@ class ContactDeliveryWorker:
             uow.audit_recorder.record(
                 action=AuditAction.CONTACT_DELIVERY_SUCCEEDED,
                 resource_type="ContactSubmission",
-                resource_id=submission.id,
+                resource_id=delivery.submission_id,
                 metadata={
                     "attempt_number": delivery.attempt_number,
                     "provider_code": receipt.provider,
                 },
                 source=AuditSource.WORKER,
             )
-            uow.outbox_events.complete(event_id=event.id, completed_at=now)
             stats.succeeded += 1
+            uow.commit()
+
+    def _finalize_failure(
+        self,
+        event_id: UUID,
+        delivery_id: UUID,
+        lease_token: UUID,
+        error: str,
+        stats: ContactDeliveryWorkerStats,
+        *,
+        permanent: bool = False,
+    ) -> None:
+        now = self._clock.now()
+        with self._uow_factory() as uow:
+            event = uow.outbox_events.get(event_id)
+            delivery = uow.deliveries.get(delivery_id)
+            if event is None:
+                stats.dead += 1
+                uow.commit()
+                return
+            if delivery is None:
+                self._mark_dead(uow, event_id, lease_token, "DELIVERY_NOT_FOUND", stats)
+                uow.commit()
+                return
+            if delivery.status is not ContactDeliveryStatus.IN_PROGRESS:
+                stats.skipped += 1
+                uow.commit()
+                return
+            self._fail(
+                uow,
+                event,
+                delivery,
+                error,
+                stats,
+                now,
+                lease_token,
+                permanent=permanent,
+            )
             uow.commit()
 
     def _fail(
@@ -153,15 +258,28 @@ class ContactDeliveryWorker:
         error: str,
         stats: ContactDeliveryWorkerStats,
         now: datetime,
+        lease_token: UUID,
         *,
         permanent: bool = False,
-    ) -> None:
+    ) -> bool:
         code = normalize_failure_code(error)
+        fenced = self._apply_failure(
+            uow,
+            event,
+            delivery,
+            code,
+            stats,
+            now,
+            lease_token,
+            permanent=permanent,
+        )
+        if not fenced:
+            return False
         if delivery.status is ContactDeliveryStatus.IN_PROGRESS:
             delivery.mark_failed(now, code)
             uow.deliveries.save(delivery)
         self._record_failure_audit(uow, delivery, code)
-        self._apply_failure(uow, event, delivery, code, stats, now, permanent=permanent)
+        return True
 
     def _apply_failure(
         self,
@@ -171,21 +289,49 @@ class ContactDeliveryWorker:
         code: str,
         stats: ContactDeliveryWorkerStats,
         now: datetime,
+        lease_token: UUID,
         *,
         permanent: bool = False,
-    ) -> None:
+    ) -> bool:
         attempt = event.attempt_count
         if permanent or attempt >= event.max_attempts:
-            uow.outbox_events.mark_dead(event_id=event.id, last_error_code=code)
-            stats.dead += 1
-            return
+            fenced = uow.outbox_events.mark_dead(
+                event_id=event.id, lease_token=lease_token, last_error_code=code
+            )
+            if fenced:
+                stats.dead += 1
+            else:
+                stats.skipped += 1
+            return fenced
         delay = self._retry_delay(attempt)
-        uow.outbox_events.mark_retry_wait(
+        fenced = uow.outbox_events.mark_retry_wait(
             event_id=event.id,
+            lease_token=lease_token,
             available_at=now + timedelta(seconds=delay),
             last_error_code=code,
         )
-        stats.retried += 1
+        if fenced:
+            stats.retried += 1
+        else:
+            stats.skipped += 1
+        return fenced
+
+    def _mark_dead(
+        self,
+        uow: ContactUnitOfWork,
+        event_id: UUID,
+        lease_token: UUID,
+        code: str,
+        stats: ContactDeliveryWorkerStats,
+    ) -> bool:
+        fenced = uow.outbox_events.mark_dead(
+            event_id=event_id, lease_token=lease_token, last_error_code=code
+        )
+        if fenced:
+            stats.dead += 1
+        else:
+            stats.skipped += 1
+        return fenced
 
     def _retry_delay(self, attempt: int) -> int:
         index = max(0, min(attempt - 1, len(self._retry_delays) - 1))
@@ -209,9 +355,10 @@ class ContactDeliveryWorker:
         uow.deliveries.add(attempt)
         return attempt
 
-    def _message(self, submission: ContactSubmission) -> ContactEmailMessage:
+    def _message(self, submission: ContactSubmission, idempotency_key: str) -> ContactEmailMessage:
         return ContactEmailMessage(
             submission_id=submission.id,
+            idempotency_key=idempotency_key,
             template_code="contact_request",
             recipient_group_code="contact_team",
             locale=submission.locale,
