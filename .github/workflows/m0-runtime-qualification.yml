@@ -1,0 +1,108 @@
+name: M0 BE-000-03 Runtime Qualification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/qualification/runtime-probe/**'
+      - '.github/workflows/m0-runtime-qualification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compatibility:
+    # Qualification only on the trusted FPS M0 branch, never on untrusted forks.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'test/m0-qualification-python313-postgres17-docker') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fps_compat
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: fps_compat
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fps_compat -d fps_compat"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    defaults:
+      run:
+        shell: bash
+        working-directory: docs/qualification/runtime-probe
+
+    steps:
+      - name: Check out precise PR head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+
+      - name: Install Python 3.13
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Install uv 0.10.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # upstream v10.3.3 pinned commit
+        with:
+          version: '0.10.0'
+          enable-cache: false
+
+      - name: Resolve exact candidate versions and record lock
+        run: |
+          set -euo pipefail
+          python --version
+          uv --version
+          uv lock --python 3.13
+          uv lock --check
+          test -s uv.lock
+          sha256sum uv.lock
+
+      - name: Install the locked candidate set
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+          uv run --frozen python -c "import fastapi, pydantic, sqlalchemy, alembic, psycopg, pytest, httpx; print('target imports OK')"
+
+      - name: Strict tests against actual PostgreSQL 17
+        env:
+          FPS_COMPAT_STRICT: '1'
+          FPS_COMPAT_DATABASE_URL: postgresql+psycopg://fps_compat@127.0.0.1:5432/fps_compat
+        run: |
+          set -euo pipefail
+          uv run --frozen pytest -q -ra test_runtime_probe.py
+
+      - name: Docker build with digest-pinned Python 3.13 parent
+        run: |
+          set -euo pipefail
+          docker build --pull -t fps-m0-runtime-probe:local -f Dockerfile .
+          docker image inspect fps-m0-runtime-probe:local --format 'Built image ID: {{.Id}}'
+
+      - name: Strict smoke inside Docker against PostgreSQL 17
+        run: |
+          set -euo pipefail
+          docker run --rm --network host \
+            -e FPS_COMPAT_STRICT=1 \
+            -e FPS_COMPAT_DATABASE_URL='postgresql+psycopg://fps_compat@127.0.0.1:5432/fps_compat' \
+            fps-m0-runtime-probe:local
+          echo 'Python image, lock, psycopg and PostgreSQL strict tests passed' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit verified uv.lock to the trusted branch
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          test -s uv.lock
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          if ! git diff --cached --quiet; then
+            git commit -m "test(m0): lock verified Python 3.13 runtime probe dependencies [skip ci]"
+            git push origin HEAD:"$BRANCH_NAME"
+          fi

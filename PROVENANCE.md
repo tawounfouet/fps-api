@@ -37,6 +37,7 @@ Les documents M0 conservent les références à l'ancien dépôt comme preuve d'
 ## Périmètre et gouvernance
 
 - `Opencode` implémente dans ce dépôt.
-- `AntiGravity` doit être ajouté comme collaborateur avant la demande de revue formelle.
+- `AntiGravity` est un agent de code IDE, pas un compte GitHub: aucune demande de revue GitHub ni ajout comme collaborateur n'est requis.
+- La revue est locale et consignée dans `docs/evidence/m1/09_LOCAL_REVIEW.md`.
 - `Thomas` décide de la clôture.
-- Aucun `DONE`, aucun merge ni déploiement tant que la revue et la validation ne sont pas recueillies.
+- Aucun `DONE`, aucun merge ni déploiement tant que la revue locale et la validation ne sont pas recueillies.

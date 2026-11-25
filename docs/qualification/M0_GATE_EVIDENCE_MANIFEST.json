@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.0.0",
+  "milestone": "M0",
+  "decision": "GO",
+  "decision_scope": "Authorize M1 / PR-BE-01 bootstrap only; not production, data processing or deployment",
+  "decision_date_utc": "2026-11-25",
+  "approval_authority": "Delegated FPS technical review per docs/governance/DELIVERY_POLICY.md and user's explicit request to grant GO if mandatory checks pass",
+  "independent_human_approval": "NOT_CLAIMED",
+  "prior_verdict": "NO-GO",
+  "prior_report": "docs/qualification/history/M0_GATE_REPORT_2026-11-25_NO_GO.md",
+  "source_repo": "tawounfouet/fastapi-fps-platform",
+  "qualification_pr": 16,
+  "qualification_pr_url": "https://github.com/tawounfouet/fastapi-fps-platform/pull/16",
+  "qualification_pr_merged": true,
+  "qualification_merge_sha": "a1eeab194e866ab4ac78dda889ac2adc089c1f45",
+  "qualification_tested_head_sha": "dc6269033809e8fbbc9839a66017120272f5106b",
+  "github_actions": {
+    "run_id": 45530002637,
+    "run_url": "https://github.com/tawounfouet/fastapi-fps-platform/actions/runs/45530002637",
+    "job_id": 138922643405,
+    "job_conclusion": "success",
+    "total_strict_tests": 12,
+    "runner_tests": {
+      "passed": 6,
+      "failed": 0,
+      "warning_count": 1
+    },
+    "docker_tests": {
+      "passed": 6,
+      "failed": 0,
+      "warning_count": 1
+    },
+    "warning": "StarletteDeprecationWarning from fastapi.testclient about httpx/httpx2, nonblocking; owner M1"
+  },
+  "runtime": {
+    "python": "3.13.18",
+    "uv": "0.10.0",
+    "postgres": "17.12",
+    "fastapi": "0.165.0",
+    "pydantic": "2.14.4",
+    "pydantic_settings": "2.16.3",
+    "sqlalchemy": "2.1.9",
+    "psycopg": "3.3.9",
+    "psycopg_binary": "3.3.9",
+    "alembic": "1.20.1",
+    "starlette": "1.10.0",
+    "uvicorn": "0.54.0"
+  },
+  "resolution": {
+    "lock_path": "docs/qualification/runtime-probe/uv.lock",
+    "lock_git_blob_sha": "78500b5e4b0c87092307a0a80d15a6fb49d5d4f1",
+    "lock_sha256": "b40d1d95eb0bc196154ba78194cf90c8077793acd5770987521900e1cc818d07",
+    "resolved_package_count": 33,
+    "uv_lock": "PASS",
+    "uv_lock_check": "PASS",
+    "uv_sync_frozen": "PASS",
+    "imports": "PASS"
+  },
+  "postgres_proof": {
+    "service": "ephemeral GitHub Actions postgres:17",
+    "server_version": "17.12",
+    "database_scope": "CI disposable test DB only",
+    "sqlalchemy_dialect": "postgresql+psycopg",
+    "checked": "Real PostgreSQL connection, commit/rollback on temporary tables",
+    "alembic_schema_migrations": "NOT_EXECUTED - M2"
+  },
+  "docker_proof": {
+    "dockerfile": "docs/qualification/runtime-probe/Dockerfile",
+    "image_parent": "python:3.13-slim",
+    "parent_index_digest": "sha256:b3575dcf816cdacc5292df77a6e3e59b8941631078373a045efa2ac1e9c5c3b2",
+    "built_image_id": "sha256:05d29d33b1c8623bf7519c729a940876790be69771460154c1c7ffed95907285",
+    "build": "PASS",
+    "strict_container_smoke": "PASS"
+  },
+  "gate_blockers": [
+    {
+      "id": "M0-BLK-01",
+      "subject": "uv lock + sync",
+      "state": "CLOSED",
+      "evidence": "run 45530002637 + uv.lock in main"
+    },
+    {
+      "id": "M0-BLK-02",
+      "subject": "psycopg3 + PG17",
+      "state": "CLOSED",
+      "evidence": "strict tests in run 45530002637"
+    },
+    {
+      "id": "M0-BLK-03",
+      "subject": "digest pinned Docker build",
+      "state": "CLOSED",
+      "evidence": "docker build+6 strict tests in run 45530002637"
+    },
+    {
+      "id": "M0-BLK-04",
+      "subject": "formal Gate review and approved decision",
+      "state": "CLOSED_BY_THIS_GATE_REVIEW",
+      "evidence": "docs/qualification/M0_GATE_REPORT.md and gate PR"
+    }
+  ],
+  "deferred_release_gates": [
+    {
+      "item": "M1 bootstrap app + root pyproject/uv.lock, app CI",
+      "owner": "FPS technical lead",
+      "milestone": "M1"
+    },
+    {
+      "item": "PostgreSQL real migrations, concurrency, alembic, UoW",
+      "owner": "FPS technical lead",
+      "milestone": "M2"
+    },
+    {
+      "item": "OIDC provider/PKCE/JWKS/admin session + security",
+      "owner": "FPS identity owner to assign",
+      "milestone": "M3"
+    },
+    {
+      "item": "Resend privacy DPA / real PII and durable email",
+      "owner": "FPS privacy/legal owner to assign",
+      "milestone": "Before real PII/M4"
+    },
+    {
+      "item": "R2 EU and real media checks",
+      "owner": "FPS media owner to assign",
+      "milestone": "M5"
+    },
+    {
+      "item": "Next.js revalidation/cache and frontend E2E",
+      "owner": "FPS frontend owner to assign",
+      "milestone": "M7/M9"
+    },
+    {
+      "item": "Legacy Vite full import/cutover and rollback",
+      "owner": "FPS migration owner to assign",
+      "milestone": "M10"
+    },
+    {
+      "item": "Render backups PITR, restore drills, staging costs",
+      "owner": "FPS operations owner to assign",
+      "milestone": "Before real deployment/M11"
+    }
+  ]
+}
