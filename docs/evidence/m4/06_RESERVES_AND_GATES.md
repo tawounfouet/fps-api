@@ -13,9 +13,9 @@
 ## Réserves de gouvernance
 
 - Revue locale AntiGravity non encore réalisée.
-- GO Thomas non encore consigné pour ce lot.
-- Commit, push et PR `PR-BE-04` non encore effectués.
-- CI GitHub distante non encore exécutée sur le SHA final.
+- GO Thomas pour merge non encore consigné.
+- Commit, push et [PR #4](https://github.com/tawounfouet/fps-api/pull/4) effectués.
+- CI GitHub distante verte sur `7877b74`, run `45606555916`, avec 4 checks verts.
 - Aucun statut `DONE`, merge ni déploiement n'est revendiqué.
 
 ## Obligations légales et confinement
@@ -24,13 +24,11 @@
 - Les adresses de test utilisent `example.test`.
 - Aucun email réel n'est envoyé.
 - Aucune production n'est touchée.
-- La conservation, la suppression et les droits GDPR restent sous réserve d'une décision produit avant toute bascule public.
+- La conservation, la suppression et les droits GDPR restent sous réserve d'une décision produit avant toute bascule publique.
 
 ## Conditions avant `DONE`
 
 1. Consigner la revue AntiGravity locale et lever ses commentaires.
-2. Obtenir le GO Thomas pour commit, push et PR.
-3. Commiter le lot, pousser la branche `feat/be-400-contact-domain-durable-submission` et ouvrir `PR-BE-04`.
-4. Obtenir une CI distante verte, y compris quality, intégration PostgreSQL et contrat OpenAPI.
-5. Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance.
-6. Ne marquer les tickets `DONE` qu'après signature finale et avant toute bascule frontend.
+2. Obtenir le GO Thomas pour merge.
+3. Traiter ou reporter explicitement les réserves `M4-R01` à `M4-R05` avec owner et échéance.
+4. Ne marquer les tickets `DONE` qu'après signature finale et avant toute bascule frontend.

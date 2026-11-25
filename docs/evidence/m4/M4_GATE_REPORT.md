@@ -37,7 +37,7 @@
 - [ ] Revue locale AntiGravity.
 - [ ] GO Thomas.
 - [x] Commit `17bece2`, push de la branche et ouverture de la [PR #4](https://github.com/tawounfouet/fps-api/pull/4).
-- [ ] CI GitHub distante verte sur le SHA final.
+- [x] CI GitHub distante verte sur le SHA final, run `45606555916`: `quality`, `integration-postgres`, `container-smoke` et `GitGuardian Security Checks` verts.
 - [ ] Réserves `M4-R01` à `M4-R05` traitées ou reportées.
 
 ## Résultats de référence
@@ -50,6 +50,7 @@
 - Secrets: `secret_scan_ok files=213 patterns=6`.
 - OpenAPI: 21 chemins, hash `6b1bb8f873c7db48433eb55fdc3258b8a97cb53d67027cd64ac40acd004642a6`.
 - Worker CLI: statistiques JSON à zéro.
+- CI PR #4: 4 checks verts sur `7877b74`, run `45606555916`.
 
 Détails dans [04_LOCAL_QUALITY_AND_TESTS.md](04_LOCAL_QUALITY_AND_TESTS.md), [05_OPENAPI_AND_CONTRACT.md](05_OPENAPI_AND_CONTRACT.md) et [06_RESERVES_AND_GATES.md](06_RESERVES_AND_GATES.md).
 
@@ -57,7 +58,6 @@ Détails dans [04_LOCAL_QUALITY_AND_TESTS.md](04_LOCAL_QUALITY_AND_TESTS.md), [0
 
 1. Revue locale AntiGravity consignée et approuvée.
 2. GO Thomas obtenu et consigné.
-3. Obtenir une CI GitHub distante verte.
-4. Ne revendiquer `DONE`, merge ou déploiement qu'après signature finale et traitement des réserves.
+3. Ne revendiquer `DONE`, merge ou déploiement qu'après signature finale et traitement des réserves.
 
 Tant que ces conditions ne sont pas remplies, aucun `DONE`, merge ni déploiement n'est revendiqué.
