@@ -48,4 +48,11 @@ AntiGravity n'est pas un compte GitHub. Aucun ajout comme collaborateur et aucun
 - **Décision** : **APPROVED**
 - **Commentaires** : Aucun bloquant ni changement requis. Le lot M1 est prêt pour la validation Lead Dev.
 - **Commit final relu** : `c0d634f6276a91e5d9e861db3f6e25709134a432`
-- **Conclusion** : **READY_FOR_THOMAS_VALIDATION**
+- **Conclusion de la revue locale** : **READY_FOR_THOMAS_VALIDATION**
+
+## Validation Thomas post revue
+
+- **Statut** : **VALIDÉE**
+- **Date** : 2026-11-25
+- **Verdict du jalon** : **M1 DONE**
+- **Preuve** : [10_THOMAS_VALIDATION.md](10_THOMAS_VALIDATION.md)
