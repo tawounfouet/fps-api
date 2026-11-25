@@ -13,7 +13,7 @@
 | Décideur | Thomas |
 | GO Thomas | à consigner |
 | Verdict local | **LOCAL_PASS_IMPLEMENTATION** |
-| Verdict jalon | **GO_FOR_REVIEW** |
+| Verdict jalon | **READY_FOR_THOMAS_MERGE** |
 | Statut `DONE` | **NON** |
 
 ## Critères vérifiés localement
@@ -34,8 +34,8 @@
 - [x] Scan de secrets vert.
 - [x] OpenAPI régénéré de façon déterministe avec 9 routes Contact.
 - [x] Aucune PII réelle, email réel, production ou changement frontend dans le lot.
-- [ ] Revue locale AntiGravity.
-- [ ] GO Thomas.
+- [x] Revue locale AntiGravity: consignée et validée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md) (verdict: APPROVED).
+- [ ] GO Thomas pour merge.
 - [x] Commit `17bece2`, push de la branche et ouverture de la [PR #4](https://github.com/tawounfouet/fps-api/pull/4).
 - [x] CI GitHub distante verte: run `45606555916` sur le lot applicatif et run `45607083647` après mise à jour des preuves, avec `quality`, `integration-postgres`, `container-smoke` et `GitGuardian Security Checks` verts.
 - [ ] Réserves `M4-R01` à `M4-R05` traitées ou reportées.
@@ -56,8 +56,8 @@ Détails dans [04_LOCAL_QUALITY_AND_TESTS.md](04_LOCAL_QUALITY_AND_TESTS.md), [0
 
 ## Conditions restantes
 
-1. Revue locale AntiGravity consignée et approuvée.
-2. GO Thomas obtenu et consigné.
+1. Revue locale AntiGravity consignée et approuvée dans [07_LOCAL_REVIEW.md](07_LOCAL_REVIEW.md) (verdict: APPROVED).
+2. GO Thomas pour merge de la PR #4.
 3. Ne revendiquer `DONE`, merge ou déploiement qu'après signature finale et traitement des réserves.
 
 Tant que ces conditions ne sont pas remplies, aucun `DONE`, merge ni déploiement n'est revendiqué.
