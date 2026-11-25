@@ -10,6 +10,10 @@
 | Jobs PR | `quality` PASS, `container-smoke` PASS, `integration-postgres` PASS, `GitGuardian Security Checks` PASS |
 | CI post-merge | **PASSED**, run [`45656145100`](https://github.com/tawounfouet/fps-api/actions/runs/45656145100) |
 | Jobs post-merge | `quality` PASS, `container-smoke` PASS, `integration-postgres` PASS |
+| Pull request de clôture | [#7](https://github.com/tawounfouet/fps-api/pull/7), MERGED via `cbb81de` |
+| Commit de clôture | `2fc7fa7` - `feat(contact): add guarded real provider smoke` |
+| CI clôture réelle | **PASSED**, run [`45677828114`](https://github.com/tawounfouet/fps-api/actions/runs/45677828114) |
+| Jobs clôture réelle | `quality` PASS, `container-smoke` PASS, `integration-postgres` PASS, `GitGuardian Security Checks` PASS en PR |
 | Revue `code-reviewer` locale | **APPROVED**, aucun finding restant |
 | GO utilisateur | Donné le 2026-11-25 pour le smoke provider réel |
 
@@ -25,6 +29,6 @@ Les runs émettent des avertissements `Node.js 20 is deprecated` pour `actions/c
 
 1. Rotation des identifiants exposés confirmée le 2026-11-25.
 2. Smoke provider réel exécuté avec GO explicite, preuve dans `06_MANUAL_SANDBOX_SMOKE.md`.
-3. Verdict final consigné dans `M4R04_CLOSURE_REPORT.md`.
+3. Verdict final consigné dans `M4R04_CLOSURE_REPORT.md`, script et preuves publiés via PR #7.
 
 Les runs verts cités dans `docs/evidence/m4/` appartiennent à la clôture M4. Les runs ci-dessus couvrent spécifiquement `M4-R04`.

@@ -14,7 +14,9 @@
 | Revue locale | `code-reviewer` APPROVED |
 | Commit fonctionnel | `58728d5` |
 | Merge | `4701529`, PR [#6](https://github.com/tawounfouet/fps-api/pull/6) |
-| CI dédiée | PR `45655851717` et post-merge `45656145100`, PASSED |
+| Commit de clôture | `2fc7fa7` |
+| Merge de clôture | `cbb81de`, PR [#7](https://github.com/tawounfouet/fps-api/pull/7) |
+| CI dédiée | PR `45655851717`, post-merge `45656145100` et clôture `45677828114`, PASSED |
 | Gate associé | M11, sans autorisation de production |
 
 ## Ce qui est accompli
@@ -29,6 +31,7 @@
 - Tests locaux verts: 149 tests au total, dont les tests ajoutés pour M4-R04.
 - Smoke sandbox local vert via `scripts/smoke_email_sandbox.py`, sans réseau ni PII.
 - Smoke provider réel vert via `scripts/smoke_email_real.py`, avec envoi Resend, envoi SMTP et sonde IMAP.
+- Script de smoke réel et preuves finales publiés via PR #7 mergée dans `main`.
 - Références du smoke réel: Resend `01a213fd-9eeb-7080-8301-354a1b1c6347`, SMTP `smtp_7e556436a1f873dd`, IMAP `OK/OK`.
 - Destinataire de test masqué dans la preuve; aucun secret ni donnée applicative réelle reproduit.
 - Ruff, format, mypy, scan de secrets, OpenAPI et Alembic verts en local et en CI.
