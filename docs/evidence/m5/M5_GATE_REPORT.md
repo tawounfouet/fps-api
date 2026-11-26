@@ -66,7 +66,7 @@ Les suites media locales couvrent domaine, contrats storage, inspection, routes 
 | Campagne R2 sandbox | `NOT_EXECUTED` | `M5P-D02` et variables explicites absentes |
 | Seuils image, AVIF et EXIF | conservateurs | Décision humaine `M5P-D03` |
 | Draft, CDN, couverture usage et delete | conservateurs | Décision humaine `M5P-D04` |
-| Tests d'intégration PostgreSQL | `PASSED` en local, `SKIPPED` en CI | URL locale fournie, secret GitHub absent |
+| Tests d'intégration PostgreSQL | `PASSED` en local et en CI | service PostgreSQL du workflow, run `45902086136` |
 | Contrat MinIO réel | `PASSED` en local, `SKIPPED` en CI | endpoint local fourni, variable GitHub absente |
 | Déploiement production | `NOT_EXECUTED` | `M5-GATE: NOT_EXECUTED` |
 | Nettoyage automatique des orphelins | non livré | Réconciliation volontairement read-only |
@@ -91,7 +91,6 @@ Les suites media locales couvrent domaine, contrats storage, inspection, routes 
 
 ## Contrôles non exécutés
 
-- PostgreSQL réel dans la CI GitHub, faute de secret `FPS_TEST_DATABASE_URL`.
 - MinIO isolé dans la CI GitHub, faute de variable `FPS_MEDIA_ENDPOINT_URL`.
 - R2 sandbox avec GO et variables explicites.
 - Qualification réseau CORS et politique d'accès public chez un fournisseur.

@@ -70,4 +70,4 @@ Le premier run CI du commit `9bf96da` a échoué sur `test_default_settings_are_
 
 - R2 sandbox: `NOT_EXECUTED`, aucun appel réel.
 - Aucune décision humaine ratifiée et aucun verdict `M5-GATE`.
-- Le job CI `integration-postgres` reste `skipped` tant que le secret `FPS_TEST_DATABASE_URL` n'est pas configuré dans le dépôt GitHub.
+- Les jobs CI `media`, `quality`, `container-smoke` et `integration-postgres` sont au vert sur le run `45902086136`.
