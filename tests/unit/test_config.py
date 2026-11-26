@@ -7,6 +7,12 @@ from fps_platform.config import Environment, Settings
 from fps_platform.modules.contact.domain.enums import ContactEmailProviderMode
 
 
+@pytest.fixture(autouse=True)
+def _isolate_settings_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
+    monkeypatch.delenv("MEDIA_STORAGE_MODE", raising=False)
+
+
 def test_default_settings_are_locally_safe() -> None:
     settings = Settings(_env_file=None)
     assert settings.environment is Environment.DEVELOPMENT

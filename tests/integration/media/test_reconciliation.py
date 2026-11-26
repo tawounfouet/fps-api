@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -31,7 +31,7 @@ FINAL_KEY = StorageKey("media/integration/original.jpg")
 ORPHAN_KEY = StorageKey("staging/worker-1/6a3c1e44-19c9-4e0e-9c0a-6d1f2a5b8c11")
 
 
-def make_ready_asset() -> MediaAsset:
+def make_ready_asset(uploaded_by: UUID) -> MediaAsset:
     return MediaAsset(
         id=uuid4(),
         storage_key=FINAL_KEY,
@@ -40,7 +40,7 @@ def make_ready_asset() -> MediaAsset:
         byte_size=ByteSize(128),
         status=MediaStatus.READY,
         metadata=MediaMetadata(),
-        uploaded_by=uuid4(),
+        uploaded_by=uploaded_by,
         created_at=MOMENT - timedelta(minutes=5),
         updated_at=MOMENT - timedelta(minutes=5),
         version=2,
@@ -53,10 +53,13 @@ def make_ready_asset() -> MediaAsset:
     )
 
 
-def test_missing_object_is_reported_without_deletion(make_uow: MakeUow) -> None:
+def test_missing_object_is_reported_without_deletion(
+    make_uow: MakeUow,
+    uploader_user_id: UUID,
+) -> None:
     clock = FakeClock(MOMENT)
     storage = InMemoryMediaStoragePort(clock)
-    asset = make_ready_asset()
+    asset = make_ready_asset(uploader_user_id)
 
     with make_uow(clock=clock) as uow:
         uow.media_assets.add(asset)
@@ -110,11 +113,14 @@ def test_orphan_staging_object_is_reported_and_kept(make_uow: MakeUow) -> None:
     assert storage.head_object(ORPHAN_KEY).exists is True
 
 
-def test_size_mismatch_is_reported_without_mutation(make_uow: MakeUow) -> None:
+def test_size_mismatch_is_reported_without_mutation(
+    make_uow: MakeUow,
+    uploader_user_id: UUID,
+) -> None:
     clock = FakeClock(MOMENT)
     storage = InMemoryMediaStoragePort(clock)
     storage.put_object(FINAL_KEY, b"x" * 64, "image/jpeg")
-    asset = make_ready_asset()
+    asset = make_ready_asset(uploader_user_id)
 
     with make_uow(clock=clock) as uow:
         uow.media_assets.add(asset)

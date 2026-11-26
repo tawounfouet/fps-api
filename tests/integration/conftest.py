@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from alembic.config import Config
@@ -13,6 +14,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from alembic import command
+from fps_platform.modules.identity.domain.value_objects import UserStatus
+from fps_platform.modules.identity.infrastructure.persistence.models import UserRecord
 from fps_platform.shared.domain.actor import ActorContext, ActorType
 from fps_platform.shared.domain.clock import SystemClock
 from fps_platform.shared.domain.identifiers import Uuid4IdGenerator
@@ -89,6 +92,28 @@ def clean_tables(engine: Engine) -> None:
     )
     with engine.begin() as connection:
         connection.execute(text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE"))
+
+
+@pytest.fixture
+def uploader_user_id(session_factory: sessionmaker[Session], clean_tables: None) -> Iterator[UUID]:
+    user_id = uuid4()
+    now = datetime(2026, 11, 26, 12, tzinfo=UTC)
+    with session_factory() as session:
+        session.add(
+            UserRecord(
+                id=user_id,
+                external_issuer="https://idp.example.test",
+                external_subject=f"media-uploader-{user_id}",
+                email=f"uploader-{user_id}@example.test",
+                display_name="Media Uploader",
+                status=UserStatus.ACTIVE.value,
+                version=1,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        session.commit()
+    yield user_id
 
 
 @pytest.fixture

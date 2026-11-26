@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session, sessionmaker
@@ -28,7 +28,7 @@ MOMENT = datetime(2026, 11, 26, 9, 0, tzinfo=UTC)
 DIGEST = "b" * 64
 
 
-def make_asset() -> MediaAsset:
+def make_asset(uploaded_by: UUID) -> MediaAsset:
     return MediaAsset(
         id=uuid4(),
         storage_key=StorageKey("media/integration/original.jpg"),
@@ -37,7 +37,7 @@ def make_asset() -> MediaAsset:
         byte_size=ByteSize(128),
         status=MediaStatus.UPLOADING,
         metadata=MediaMetadata(),
-        uploaded_by=uuid4(),
+        uploaded_by=uploaded_by,
         created_at=MOMENT,
         updated_at=MOMENT,
         version=1,
@@ -58,8 +58,9 @@ def make_evidence(asset: MediaAsset) -> PromotionEvidence:
 
 def test_media_repository_persists_claim_and_promotion_proof(
     session_factory: sessionmaker[Session],
+    uploader_user_id: UUID,
 ) -> None:
-    asset = make_asset()
+    asset = make_asset(uploader_user_id)
     with session_factory() as session:
         repository = SqlAlchemyMediaAssetRepository(session)
         repository.add(asset)
@@ -75,8 +76,8 @@ def test_media_repository_persists_claim_and_promotion_proof(
         assert loaded.attempt_count == 1
         assert loaded.claim_owner == "worker-1"
         assert loaded.intent_expires_at == MOMENT + timedelta(seconds=120)
-        loaded.mark_processing(MOMENT)
         expected_version = loaded.version
+        loaded.mark_processing(MOMENT)
         evidence = make_evidence(loaded)
         loaded.mark_ready(MOMENT, evidence=evidence)
         repository.save(loaded, expected_version=expected_version)
@@ -95,14 +96,15 @@ def test_media_repository_persists_claim_and_promotion_proof(
 
 def test_media_repository_rejects_stale_version(
     session_factory: sessionmaker[Session],
+    uploader_user_id: UUID,
 ) -> None:
-    asset = make_asset()
+    asset = make_asset(uploader_user_id)
     with session_factory() as session:
         repository = SqlAlchemyMediaAssetRepository(session)
         repository.add(asset)
         session.commit()
 
-    stale = make_asset()
+    stale = make_asset(uploader_user_id)
     stale.id = asset.id
     with session_factory() as session:
         repository = SqlAlchemyMediaAssetRepository(session)

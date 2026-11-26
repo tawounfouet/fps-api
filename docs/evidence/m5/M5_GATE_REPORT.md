@@ -13,8 +13,8 @@ Ce rapport présente uniquement ce qui est livré, testé, différé ou refusé.
 |---|---|
 | Date | 2026-11-26 |
 | Repo | `backends/fps-api` |
-| Commit de référence | `c17aa64` |
-| Arborescence | non commitée, aucun staging et aucune PR |
+| Commit de référence | `9bf96da` puis correctifs de statut sur `main` |
+| Arborescence | poussée sur `origin/main`, arbre propre |
 | Alembic head | `e3b1c7a92d64`, parent `d4e7a92b6f31` |
 | Index des preuves | [A54_EVIDENCE_INDEX.md](./A54_EVIDENCE_INDEX.md) |
 | Traçabilité | [A56_TRACEABILITY.md](./A56_TRACEABILITY.md) |
@@ -51,9 +51,9 @@ Routes et opérations détaillées dans [A57_M6_HANDOFF.md](./A57_M6_HANDOFF.md)
 | `uv run ruff check .` | `All checks passed!` |
 | `uv run mypy src tests scripts alembic` | `Success: no issues found in 257 source files` |
 | `uv run pytest -q -m "not integration"` | `397 passed, 2 skipped, 54 deselected, 1 warning in 4.45s` |
-| `uv run python scripts/check_secrets.py` | `secret_scan_ok files=287 patterns=6` |
+| `uv run python scripts/check_secrets.py` | `secret_scan_ok files=388 patterns=6` |
+| Suite complète avec PostgreSQL et MinIO locaux | `452 passed, 1 skipped, 1 warning in 11.80s` |
 | `git diff --check` | aucune sortie, `exit=0` |
-| `git diff --cached --name-only` | aucune sortie |
 | `alembic heads --verbose` | head `e3b1c7a92d64`, parent `d4e7a92b6f31` |
 
 Les suites media locales couvrent domaine, contrats storage, inspection, routes admin, E2E intake, réconciliation, résolution publique, audit, métriques et redaction. Le warning pytest est antérieur au lot.
@@ -66,8 +66,8 @@ Les suites media locales couvrent domaine, contrats storage, inspection, routes 
 | Campagne R2 sandbox | `NOT_EXECUTED` | `M5P-D02` et variables explicites absentes |
 | Seuils image, AVIF et EXIF | conservateurs | Décision humaine `M5P-D03` |
 | Draft, CDN, couverture usage et delete | conservateurs | Décision humaine `M5P-D04` |
-| Tests d'intégration PostgreSQL | SKIPPED | `FPS_TEST_DATABASE_URL` absent |
-| Contrat MinIO réel | `NOT_EXECUTED` | `FPS_MEDIA_ENDPOINT_URL` absent |
+| Tests d'intégration PostgreSQL | `PASSED` en local, `SKIPPED` en CI | URL locale fournie, secret GitHub absent |
+| Contrat MinIO réel | `PASSED` en local, `SKIPPED` en CI | endpoint local fourni, variable GitHub absente |
 | Déploiement production | `NOT_EXECUTED` | `M5-GATE: NOT_EXECUTED` |
 | Nettoyage automatique des orphelins | non livré | Réconciliation volontairement read-only |
 | Cache d'idempotence partagé | non livré | Nécessite décision de persistance multi-instances |
@@ -91,8 +91,8 @@ Les suites media locales couvrent domaine, contrats storage, inspection, routes 
 
 ## Contrôles non exécutés
 
-- PostgreSQL réel avec `FPS_TEST_DATABASE_URL`.
-- MinIO isolé avec `FPS_MEDIA_ENDPOINT_URL`.
+- PostgreSQL réel dans la CI GitHub, faute de secret `FPS_TEST_DATABASE_URL`.
+- MinIO isolé dans la CI GitHub, faute de variable `FPS_MEDIA_ENDPOINT_URL`.
 - R2 sandbox avec GO et variables explicites.
 - Qualification réseau CORS et politique d'accès public chez un fournisseur.
 - Déploiement production et validation post-déploiement.

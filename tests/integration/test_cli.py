@@ -8,6 +8,8 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 
 ROOT = Path(__file__).resolve().parents[2]
 pytestmark = pytest.mark.integration
@@ -115,7 +117,9 @@ def test_diagnostics_are_safe(database_url: str) -> None:
     result = run_script("db_diagnostics.py", database_environment(database_url))
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
+    heads = ScriptDirectory.from_config(Config(str(ROOT / "alembic.ini"))).get_heads()
+    assert len(heads) == 1
     assert payload["status"] == "ok"
-    assert payload["migration"] == "c8cfc1256c53"
+    assert payload["migration"] == heads[0]
     assert "url" not in payload
     assert "password" not in result.stdout.lower()
