@@ -17,8 +17,8 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # upstream v10.3.3 pinned commit
         with:
           python-version: "3.13"
           enable-cache: true
@@ -32,8 +32,39 @@ jobs:
       - run: uv run python scripts/export_openapi.py
       - run: git diff --exit-code -- openapi/openapi.json
 
+  media:
+    runs-on: ubuntu-latest
+    env:
+      MEDIA_STORAGE_MODE: fake
+      ENVIRONMENT: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # upstream v10.3.3 pinned commit
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv python pin 3.13
+      - run: uv sync --frozen --all-groups
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy src tests scripts alembic
+      - run: uv run pytest -q -m "not integration"
+      - run: uv run pytest -q tests/unit/media tests/contracts/media tests/security/media
+      - run: uv run python scripts/check_secrets.py
+      - run: |
+          before=$(shasum -a 256 openapi/openapi.json | cut -d' ' -f1)
+          uv run python scripts/export_openapi.py >/dev/null
+          after=$(shasum -a 256 openapi/openapi.json | cut -d' ' -f1)
+          test "$before" = "$after"
+      - run: uv run python scripts/check_media_storage_mode.py
+      - run: |
+          if ENVIRONMENT=production DJANGO_ENV=production uv run python scripts/check_media_storage_mode.py; then
+            echo "fake storage mode was accepted in production"
+            exit 1
+          fi
+
   integration-postgres:
-    needs: quality
+    needs: [quality, media]
     runs-on: ubuntu-latest
     env:
       FPS_DATABASE_URL: postgresql+psycopg://fps@127.0.0.1:5432/fps
@@ -53,8 +84,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # upstream v10.3.3 pinned commit
         with:
           python-version: "3.13"
           enable-cache: true
@@ -72,7 +103,7 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: docker build --pull -t fps-platform:ci .
       - run: |
           docker run --rm -d --name fps-ci -p 8000:8000 \

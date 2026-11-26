@@ -9,6 +9,7 @@ import pytest
 from alembic.config import Config
 from sqlalchemy import create_engine, pool, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from alembic import command
@@ -26,6 +27,14 @@ MakeUow = Callable[..., SqlAlchemyUnitOfWork]
 def database_url() -> str:
     value = os.getenv("FPS_TEST_DATABASE_URL")
     if value:
+        probe = create_engine(value, poolclass=pool.NullPool)
+        try:
+            with probe.connect() as connection:
+                connection.execute(text("SELECT 1"))
+        except SQLAlchemyError:
+            pytest.skip("PostgreSQL is not reachable at FPS_TEST_DATABASE_URL")
+        finally:
+            probe.dispose()
         return value
     if os.getenv("CI") == "true":
         pytest.fail("FPS_TEST_DATABASE_URL is required in CI")
@@ -74,6 +83,7 @@ def clean_tables(engine: Engine) -> None:
         "user_roles",
         "users",
         "roles",
+        "media_assets",
         "persistence_probes",
         "persistence_probe_parents",
     )

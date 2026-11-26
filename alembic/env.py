@@ -9,6 +9,7 @@ from alembic import context
 from fps_platform.modules.audit.infrastructure.persistence import models as audit_models
 from fps_platform.modules.contact.infrastructure.persistence import models as contact_models
 from fps_platform.modules.identity.infrastructure.persistence import models as identity_models
+from fps_platform.modules.media.infrastructure.persistence import models as media_models
 from fps_platform.modules.outbox.infrastructure.persistence import models as outbox_models
 from fps_platform.shared.infrastructure.persistence.base import Base
 
@@ -29,13 +30,16 @@ _registered_models = (
     identity_models.UserRecord,
     identity_models.RoleRecord,
     identity_models.UserRoleRecord,
+    media_models.MediaAssetRecord,
 )
 
 
 def get_url() -> str:
     configured_url = config.get_main_option("sqlalchemy.url")
     if not configured_url:
-        raise RuntimeError("DATABASE_URL or FPS_DATABASE_URL is required")
+        raise RuntimeError("DATABASE_URL is not configured")
+    if not configured_url.startswith(("postgresql://", "postgresql+psycopg://")):
+        raise RuntimeError("DATABASE_URL must use postgresql or postgresql+psycopg")
     return configured_url
 
 

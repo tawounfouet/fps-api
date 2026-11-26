@@ -33,6 +33,19 @@ from fps_platform.modules.identity.domain.exceptions import (
     TokenValidationError,
     UserNotFoundError,
 )
+from fps_platform.modules.media.application.dto import (
+    MediaConflictError,
+    MediaInvalidInputError,
+    MediaNotFoundError,
+    MediaPayloadTooLargeError,
+    MediaStorageUnavailableError,
+    MediaUnsupportedTypeError,
+)
+from fps_platform.modules.media.application.services.promotion import (
+    MediaInspectionError,
+    PromotionBlockedError,
+)
+from fps_platform.modules.media.domain.exceptions import MediaStorageError
 from fps_platform.observability.request_context import get_correlation_id
 from fps_platform.shared.domain.errors import ConflictError
 
@@ -223,6 +236,62 @@ CONTACT_ERROR_RESPONSES: dict[type[Exception], tuple[int, str, str]] = {
 }
 
 
+MEDIA_ERROR_RESPONSES: dict[type[Exception], tuple[int, str, str]] = {
+    MediaNotFoundError: (404, "MEDIA_NOT_FOUND", "The media asset was not found."),
+    MediaConflictError: (409, "MEDIA_CONFLICT", "The media conflicts with current state."),
+    MediaPayloadTooLargeError: (
+        413,
+        "PAYLOAD_TOO_LARGE",
+        "The media payload is too large.",
+    ),
+    MediaUnsupportedTypeError: (
+        415,
+        "UNSUPPORTED_MEDIA_TYPE",
+        "The media type is not supported.",
+    ),
+    MediaInvalidInputError: (422, "MEDIA_INVALID_INPUT", "The media request is invalid."),
+    MediaStorageUnavailableError: (
+        503,
+        "DEPENDENCY_UNAVAILABLE",
+        "The media dependency is unavailable.",
+    ),
+    MediaStorageError: (503, "DEPENDENCY_UNAVAILABLE", "The media storage is unavailable."),
+    MediaInspectionError: (422, "MEDIA_INVALID_INPUT", "The media request is invalid."),
+    PromotionBlockedError: (422, "MEDIA_INVALID_INPUT", "The media request is invalid."),
+}
+
+MEDIA_CODE_RESPONSES: dict[str, tuple[int, str, str]] = {
+    "MEDIA_TOO_LARGE": (413, "PAYLOAD_TOO_LARGE", "The media payload is too large."),
+    "UNSUPPORTED_MEDIA_TYPE": (
+        415,
+        "UNSUPPORTED_MEDIA_TYPE",
+        "The media type is not supported.",
+    ),
+    "MEDIA_CORRUPT": (422, "MEDIA_CORRUPT", "The media object is corrupt."),
+    "MEDIA_STILL_IN_USE": (409, "MEDIA_CONFLICT", "The media conflicts with current state."),
+    "STORAGE_TEMPORARY_FAILURE": (
+        503,
+        "DEPENDENCY_UNAVAILABLE",
+        "The media storage is temporarily unavailable.",
+    ),
+    "PROMOTION_VERSION_CONFLICT": (
+        409,
+        "MEDIA_CONFLICT",
+        "The media conflicts with current state.",
+    ),
+    "ATTEMPT_BUDGET_EXHAUSTED": (
+        409,
+        "MEDIA_CONFLICT",
+        "The upload attempt budget is exhausted.",
+    ),
+    "PROMOTION_INTERNAL_ERROR": (
+        503,
+        "DEPENDENCY_UNAVAILABLE",
+        "The media promotion could not be completed.",
+    ),
+}
+
+
 async def authentication_handler(_: Request, exc: AuthenticationError) -> JSONResponse:
     code = exc.code if exc.code in AUTH_CODES else "AUTHENTICATION_REQUIRED"
     logger.warning("authentication_failed", extra={"code": code})
@@ -275,6 +344,21 @@ async def contact_handler(_: Request, exc: Exception) -> JSONResponse:
     )
 
 
+async def media_handler(_: Request, exc: Exception) -> JSONResponse:
+    status_code, code, message = MEDIA_ERROR_RESPONSES[type(exc)]
+    raw_code = getattr(exc, "code", None)
+    if isinstance(raw_code, str):
+        status_code, code, message = MEDIA_CODE_RESPONSES.get(
+            raw_code, (status_code, code, message)
+        )
+    logger.warning("media_request_failed", extra={"code": code, "status_code": status_code})
+    return JSONResponse(
+        status_code=status_code,
+        content=error_payload(code=code, message=message),
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 def install_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AuthenticationError, cast(Any, authentication_handler))
     app.add_exception_handler(AuthorizationError, cast(Any, authorization_handler))
@@ -283,6 +367,8 @@ def install_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(IdentityError, cast(Any, identity_fallback_handler))
     for error_type in CONTACT_ERROR_RESPONSES:
         app.add_exception_handler(error_type, cast(Any, contact_handler))
+    for error_type in MEDIA_ERROR_RESPONSES:
+        app.add_exception_handler(error_type, cast(Any, media_handler))
     app.add_exception_handler(RequestValidationError, cast(Any, validation_handler))
     app.add_exception_handler(StarletteHTTPException, cast(Any, http_handler))
     app.add_exception_handler(Exception, cast(Any, unhandled_handler))

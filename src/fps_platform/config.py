@@ -2,12 +2,21 @@ from __future__ import annotations
 
 import math
 from enum import StrEnum
+from re import Pattern, compile
 from urllib.parse import urlparse
 
-from pydantic import AnyHttpUrl, Field, SecretStr, field_validator, model_validator
+from pydantic import (
+    AnyHttpUrl,
+    Field,
+    SecretStr,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from fps_platform.modules.contact.domain.enums import ContactEmailProviderMode
+from fps_platform.modules.media.domain.enums import MediaStorageMode
 
 ALLOWED_LOG_LEVELS = frozenset({"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"})
 DATABASE_SCHEMES = frozenset({"postgresql", "postgresql+psycopg"})
@@ -18,6 +27,25 @@ MIN_CONTACT_BODY_BYTES = 1024
 MAX_CONTACT_BODY_BYTES = 65536
 MAX_CONTACT_PROXY_COUNT = 10
 MAX_CONTACT_RETRY_DELAY_SECONDS = 86400
+MEDIA_BUCKET_PATTERN: Pattern[str] = compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
+MEDIA_REGION_PATTERN: Pattern[str] = compile(r"^(?:local|eu|auto|[a-z]{2}(?:-[a-z]+)+-\d+)$")
+MIN_MEDIA_SIGNED_URL_TTL_SECONDS = 60
+MAX_MEDIA_SIGNED_URL_TTL_SECONDS = 300
+MIN_MEDIA_MAX_BYTES = 1
+MAX_MEDIA_MAX_BYTES = 10485760
+MIN_MEDIA_REQUEST_TIMEOUT_SECONDS = 1.0
+MAX_MEDIA_REQUEST_TIMEOUT_SECONDS = 60.0
+
+
+def normalize_absolute_url(value: str | None, label: str) -> str | None:
+    if value is None:
+        return None
+    parsed = urlparse(value.strip())
+    if parsed.scheme not in {"http", "https"} or parsed.netloc == "":
+        raise ValueError(f"{label} must be an absolute http or https URL")
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ValueError(f"{label} must not contain credentials, query or fragment")
+    return value.strip().rstrip("/")
 
 
 class Environment(StrEnum):
@@ -86,6 +114,17 @@ class Settings(BaseSettings):
     )
     contact_worker_lease_seconds: int = 60
     contact_worker_batch_size: int = 20
+    media_storage_mode: MediaStorageMode = MediaStorageMode.FAKE
+    media_bucket: str | None = None
+    media_region: str | None = "local"
+    media_endpoint_url: str | None = None
+    media_access_key_id: SecretStr | None = None
+    media_secret_access_key: SecretStr | None = None
+    media_public_base_url: str | None = None
+    media_signed_url_ttl_seconds: int = 300
+    media_max_bytes: int = 10485760
+    media_request_timeout_seconds: float = 10.0
+    media_force_path_style: bool = False
 
     @field_validator("log_level")
     @classmethod
@@ -282,6 +321,59 @@ class Settings(BaseSettings):
             raise ValueError("CONTACT_WORKER_BATCH_SIZE must be between 1 and 100")
         return value
 
+    @field_validator("media_bucket")
+    @classmethod
+    def validate_media_bucket(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if len(normalized) > 63 or not MEDIA_BUCKET_PATTERN.fullmatch(normalized):
+            raise ValueError("MEDIA_BUCKET is not a valid bucket name")
+        return normalized
+
+    @field_validator("media_region")
+    @classmethod
+    def validate_media_region(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not MEDIA_REGION_PATTERN.fullmatch(normalized):
+            raise ValueError("MEDIA_REGION is not supported")
+        return normalized
+
+    @field_validator("media_endpoint_url", "media_public_base_url")
+    @classmethod
+    def validate_media_urls(cls, value: str | None, info: ValidationInfo) -> str | None:
+        label = (
+            "MEDIA_PUBLIC_BASE_URL"
+            if info.field_name == "media_public_base_url"
+            else "MEDIA_ENDPOINT_URL"
+        )
+        return normalize_absolute_url(value, label)
+
+    @field_validator("media_signed_url_ttl_seconds")
+    @classmethod
+    def validate_media_signed_url_ttl(cls, value: int) -> int:
+        if not MIN_MEDIA_SIGNED_URL_TTL_SECONDS <= value <= MAX_MEDIA_SIGNED_URL_TTL_SECONDS:
+            raise ValueError("MEDIA_SIGNED_URL_TTL_SECONDS is out of range")
+        return value
+
+    @field_validator("media_max_bytes")
+    @classmethod
+    def validate_media_max_bytes(cls, value: int) -> int:
+        if not MIN_MEDIA_MAX_BYTES <= value <= MAX_MEDIA_MAX_BYTES:
+            raise ValueError("MEDIA_MAX_BYTES is out of range")
+        return value
+
+    @field_validator("media_request_timeout_seconds")
+    @classmethod
+    def validate_media_request_timeout(cls, value: float) -> float:
+        if not math.isfinite(value) or not (
+            MIN_MEDIA_REQUEST_TIMEOUT_SECONDS <= value <= MAX_MEDIA_REQUEST_TIMEOUT_SECONDS
+        ):
+            raise ValueError("MEDIA_REQUEST_TIMEOUT_SECONDS is out of range")
+        return value
+
     @model_validator(mode="after")
     def enforce_contact_policy(self) -> Settings:
         expected_provider = {
@@ -359,6 +451,38 @@ class Settings(BaseSettings):
             raise ValueError(f"missing IMAP configuration: {', '.join(missing)}")
         if self.environment is Environment.PRODUCTION and not self.imap_use_ssl:
             raise ValueError("IMAP_USE_SSL must be enabled in production")
+        return self
+
+    @model_validator(mode="after")
+    def enforce_media_policy(self) -> Settings:
+        if self.media_storage_mode is not MediaStorageMode.S3:
+            return self
+        missing: list[str] = []
+        public_base_url = self.media_public_base_url
+        if self.media_bucket is None:
+            missing.append("MEDIA_BUCKET")
+        if self.media_region is None:
+            missing.append("MEDIA_REGION")
+        if self.media_access_key_id is None:
+            missing.append("MEDIA_ACCESS_KEY_ID")
+        if self.media_secret_access_key is None:
+            missing.append("MEDIA_SECRET_ACCESS_KEY")
+        if public_base_url is None:
+            missing.append("MEDIA_PUBLIC_BASE_URL")
+        if missing:
+            raise ValueError(f"missing media storage configuration: {', '.join(missing)}")
+        if (
+            self.environment is Environment.PRODUCTION
+            and self.media_endpoint_url is not None
+            and not self.media_endpoint_url.startswith("https://")
+        ):
+            raise ValueError("MEDIA_ENDPOINT_URL must use https in production")
+        if (
+            self.environment is Environment.PRODUCTION
+            and public_base_url is not None
+            and not public_base_url.startswith("https://")
+        ):
+            raise ValueError("MEDIA_PUBLIC_BASE_URL must use https in production")
         return self
 
     @model_validator(mode="after")

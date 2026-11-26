@@ -154,3 +154,13 @@ L'ADR-0007 clarifie les noms et les etats, sans modifier le choix de fournisseur
 - Les valeurs `FAILED` et `REJECTED` ne doivent pas etre confondues : `FAILED` peut etre un MediaStatus, `REJECTED` est une classification d'erreur de validation dans ce contexte.
 
 Decision source : `docs/adr/ADR-0007-domain-state-and-revisions.md`; preuves de tests M4/M5 toujours **NOT_EXECUTED**.
+
+## Addendum DEC-M0-009 / 2026-11-25
+
+Thomas Awounfouet a ratifié la direction DEC-M0-009 le 2026-11-25 :
+
+- MinIO local isolé est le fournisseur de test, de CI et de validation contractuelle de l'API S3 compatible.
+- Cloudflare R2 reste le fournisseur cible de production, sous réserve du bucket, du compte, de la juridiction et des credentials de sandbox effectivement vérifiés en M5.
+- AWS S3 n'est pas retenu comme cible par défaut ; rester sur le port `MediaStoragePort` permet de le réévaluer sans changer le domaine.
+- Aucune URL propre à R2, aucun SDK fournisseur et aucun secret ne peuvent apparaître dans le domaine, l'application, les DTO publics ou les journaux.
+- Cet addendum ne prouve ni bucket créé, ni appel réseau R2 réussi, ni gate M5 obtenu.

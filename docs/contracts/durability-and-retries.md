@@ -36,21 +36,32 @@ class UnitOfWork(Protocol):
     outbox: OutboxRepository
     idempotency: IdempotencyRecordRepository
     audit: AuditRepository
+
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
+
 
 class DurableOutboxPort(Protocol):
     def enqueue(self, event: OutboxEvent) -> None: ...
     def claim_due(self, *, max_items: int, worker_id: str) -> list[LeasedOutboxEvent]: ...
     def finish(self, *, id: UUID, lease_token: UUID, result: WorkerOutcome) -> bool: ...
-    def retry(self, *, id: UUID, lease_token: UUID, available_at: datetime, error_code: str) -> bool: ...
+    def retry(
+        self, *, id: UUID, lease_token: UUID, available_at: datetime, error_code: str
+    ) -> bool: ...
     def block(self, *, id: UUID, lease_token: UUID, reason: str) -> bool: ...
+
 
 class ContentRevalidationPort(Protocol):
     def revalidate(
-        self, *, event_id: UUID, target: RevalidationTarget,
-        publication_sequence: int, correlation_id: str
+        self,
+        *,
+        event_id: UUID,
+        target: RevalidationTarget,
+        publication_sequence: int,
+        correlation_id: str,
     ) -> RevalidationOutcome: ...
+
+
 # Success: ACKNOWLEDGED (cache invalidation requested, not reader-freshness proven)
 # Other: RETRYABLE_FAILURE, PERMANENT_FAILURE
 ```

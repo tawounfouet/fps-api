@@ -29,6 +29,12 @@ ALLOWED_METADATA_KEYS: dict[AuditAction, frozenset[str]] = {
     AuditAction.USER_SUSPENDED: frozenset({"reason_code"}),
     AuditAction.USER_ACTIVATED: frozenset({"reason_code"}),
     AuditAction.USER_DISABLED: frozenset({"reason_code"}),
+    AuditAction.MEDIA_UPLOAD_REQUESTED: frozenset({"media_asset_status", "declared_mime"}),
+    AuditAction.MEDIA_UPLOAD_CONFIRMED: frozenset({"from_status", "to_status"}),
+    AuditAction.MEDIA_METADATA_UPDATED: frozenset({"from_version", "to_version"}),
+    AuditAction.MEDIA_ARCHIVED: frozenset({"from_status", "to_status"}),
+    AuditAction.MEDIA_RESTORED: frozenset({"from_status", "to_status"}),
+    AuditAction.MEDIA_RECONCILIATION_REPORTED: frozenset({"finding_count", "dry_run"}),
 }
 FORBIDDEN_METADATA_TERMS = (
     "authorization",

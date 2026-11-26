@@ -20,6 +20,9 @@ from fps_platform.modules.identity.infrastructure.persistence.repository import 
     SqlAlchemyRoleRepository,
     SqlAlchemyUserRepository,
 )
+from fps_platform.modules.media.infrastructure.persistence.repository import (
+    SqlAlchemyMediaAssetRepository,
+)
 from fps_platform.modules.outbox.application.recorder import OutboxRecorder
 from fps_platform.modules.outbox.infrastructure.persistence.repository import (
     SqlAlchemyOutboxEventRepository,
@@ -64,6 +67,10 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
     @property
     def idempotency_keys(self) -> SqlAlchemyContactIdempotencyRepository:
         return SqlAlchemyContactIdempotencyRepository(self.session, self.clock)
+
+    @property
+    def media_assets(self) -> SqlAlchemyMediaAssetRepository:
+        return SqlAlchemyMediaAssetRepository(self.session)
 
     @property
     def users(self) -> SqlAlchemyUserRepository:

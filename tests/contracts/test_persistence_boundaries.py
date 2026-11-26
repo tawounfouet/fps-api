@@ -8,11 +8,13 @@ DOMAIN_PATHS = (
     ROOT / "src/fps_platform/modules/audit/domain",
     ROOT / "src/fps_platform/modules/outbox/domain",
     ROOT / "src/fps_platform/modules/identity/domain",
+    ROOT / "src/fps_platform/modules/media/domain",
 )
 REPOSITORY_PATHS = (
     ROOT / "src/fps_platform/modules/audit/infrastructure/persistence/repository.py",
     ROOT / "src/fps_platform/modules/outbox/infrastructure/persistence/repository.py",
     ROOT / "src/fps_platform/modules/identity/infrastructure/persistence/repository.py",
+    ROOT / "src/fps_platform/modules/media/infrastructure/persistence/repository.py",
     ROOT / "tests/fixtures/persistence_probe.py",
 )
 

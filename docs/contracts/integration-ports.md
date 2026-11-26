@@ -41,31 +41,34 @@ La transaction locale n'inclut aucun appel fournisseur. Le flux de reprise du wo
 ```python
 # Pseudocode contractuel, NON implémenté
 class EmailNotification:
-    contact_submission_id: UUID         # ID opaque, jamais email du prospect
-    delivery_intent_id: UUID             # intention durable issue de PostgreSQL
-    template_code: str                   # ex: CONTACT_NEW_INTERNAL_V1
+    contact_submission_id: UUID  # ID opaque, jamais email du prospect
+    delivery_intent_id: UUID  # intention durable issue de PostgreSQL
+    template_code: str  # ex: CONTACT_NEW_INTERNAL_V1
     template_version: int
     locale: Literal["fr", "en"]
-    recipient_group: str                 # référence à liste autorisée en configuration
-    safe_admin_deeplink: str             # lien vers Admin qui exige login
+    recipient_group: str  # référence à liste autorisée en configuration
+    safe_admin_deeplink: str  # lien vers Admin qui exige login
     correlation_id: str
 
+
 class IdempotencyContext:
-    logical_delivery_id: UUID            # stable au travers de tous les retries
-    dedup_key: str                       # sans PII, <=256 caractères pour Resend
-    payload_hash: str                    # hash du template, version et destinataires
-    original_created_at: datetime        # UTC aware
-    attempt_number: int                  # numérotation dans l'application
+    logical_delivery_id: UUID  # stable au travers de tous les retries
+    dedup_key: str  # sans PII, <=256 caractères pour Resend
+    payload_hash: str  # hash du template, version et destinataires
+    original_created_at: datetime  # UTC aware
+    attempt_number: int  # numérotation dans l'application
+
 
 class DeliveryOutcome:
     status: Literal["SUCCEEDED", "RETRYABLE_FAILURE", "PERMANENT_FAILURE"]
-    provider_reference: str | None       # id fournisseur, pas un statut de lecture
+    provider_reference: str | None  # id fournisseur, pas un statut de lecture
     accepted_at: datetime | None
-    acceptance_uncertain: bool           # True en cas de timeout après possible acceptation
-    provider_code: str | None            # code stable et assaini
-    retry_after: datetime | None         # UTC si connu
+    acceptance_uncertain: bool  # True en cas de timeout après possible acceptation
+    provider_code: str | None  # code stable et assaini
+    retry_after: datetime | None  # UTC si connu
     reconciliation_required: bool
     correlation_id: str
+
 
 class EmailDeliveryPort(Protocol):
     def send_contact_notification(
@@ -104,7 +107,10 @@ class EmailDeliveryPort(Protocol):
 
 ```python
 class EmailWebhookVerificationPort(Protocol):
-    def verify_and_parse(self, raw_body: bytes, headers: Mapping[str,str]) -> VerifiedEmailEvent: ...
+    def verify_and_parse(
+        self, raw_body: bytes, headers: Mapping[str, str]
+    ) -> VerifiedEmailEvent: ...
+
 
 class VerifiedEmailEvent:
     event_id: str
@@ -133,15 +139,17 @@ class UploadIntentRequest:
     claimed_sha256: str | None
     idempotency_key: str
 
+
 class SignedUploadIntent:
     media_asset_id: UUID
     intent_id: UUID
-    storage_key: str              # quarantaine générée par serveur
+    storage_key: str  # quarantaine générée par serveur
     method: Literal["PUT"]
-    upload_url: str               # secret temporaire à ne jamais logguer
+    upload_url: str  # secret temporaire à ne jamais logguer
     required_headers: dict[str, str]
-    expires_at: datetime         # UTC
-    declared_max_size: int       # limite de politique, non preuve d'application R2
+    expires_at: datetime  # UTC
+    declared_max_size: int  # limite de politique, non preuve d'application R2
+
 
 class ObjectHead:
     key: str
@@ -149,6 +157,7 @@ class ObjectHead:
     content_type: str | None
     etag: str | None
     last_modified: datetime | None
+
 
 class InspectedObject:
     key: str
@@ -159,21 +168,55 @@ class InspectedObject:
     height: int
     verified_at: datetime
 
+
+class InspectedObject:
+    body: bytes
+    byte_size: int
+    content_type: str | None
+    etag: str | None
+    truncated: bool
+    detected_mime: str | None = None
+    width: int | None = None
+    height: int | None = None
+    checksum: str | None = None
+
+
+class DeleteObjectRequest:
+    key: StorageKey
+    authorized_deletion_id: DeletionAuthorizationId
+
+
+class ResolvePublicUrlRequest:
+    key: StorageKey
+    readiness_proof_id: UUID
+
+
 class MediaStoragePort(Protocol):
     def create_upload_intent(self, request: UploadIntentRequest) -> SignedUploadIntent: ...
-    def head_object(self, key: str) -> ObjectHead | None: ...
-    def read_or_inspect_object(self, key: str) -> InspectedObject: ...
-    def delete_object(self, key: str, *, authorized_deletion_id: UUID) -> None: ...
-    def resolve_public_url(self, key: str, *, readiness_proof_id: UUID) -> str: ...
+    def head_object(self, key: StorageKey) -> ObjectHead: ...
+    def read_or_inspect_object(self, key: StorageKey, *, max_bytes: int) -> InspectedObject: ...
+    def copy_object(self, *, source_key: StorageKey, destination_key: StorageKey) -> None: ...
+    def delete_object(self, request: DeleteObjectRequest) -> None: ...
+    def resolve_public_url(self, request: ResolvePublicUrlRequest) -> str: ...
+    def close(self) -> None: ...
+
+
+class ImageInspectionPort(Protocol):
+    def inspect(self, body: bytes, *, content_type: str | None) -> InspectionEvidence: ...
 ```
 
 Les méthodes décrivent le **contrat applicatif**, pas les signatures boto3 ou R2. Une couche applicative gère l'intent persistée, l'autorisation, le cycle de vie, les statuts et l'audit. Le port n'assimile jamais un `HEAD` réussi à un média vérifié.
+
+Décisions appliquées: **CONSERVATIVE TECHNICAL DEFAULT / HUMAN DECISION PENDING**.
+PUT signé, TTL maximum 300 secondes, Content-Type signé, clé serveur.
+Suppression avec `authorized_deletion_id`; URL publique avec `readiness_proof_id`.
+Codes applicatifs: `MEDIA_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `MEDIA_CORRUPT`, `STORAGE_TEMPORARY_FAILURE`, `MEDIA_STILL_IN_USE`.
 
 ### 3.2 Politique de contenu du MVP
 
 | Règle | Valeur proposée | Preuve requise M5 |
 |---|---|---|
-| Types autorisés | jpeg, png, webp, avif | Sniff bytes réel et test de décodage |
+| Types autorisés | jpeg, png, webp; avif suspendu | Sniff bytes réel et test de décodage |
 | SVG arbitraire | Interdit | Rejet API |
 | Taille minimale | `> 0` octet | Refus zéro octet |
 | Taille max | 10 MiB | Contrôle avant et après PUT |

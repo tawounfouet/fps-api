@@ -172,19 +172,22 @@ class HeroPayloadV1(BaseModel):
     eyebrow: str | None = None
     subheadline: str | None = None
     background_media_id: UUID | None = None
-    primary_cta: CtaValueObject | None = None    # type cible, à définir en M6
+    primary_cta: CtaValueObject | None = None  # type cible, à définir en M6
     secondary_cta: CtaValueObject | None = None  # type cible, à définir en M6
     alignment: Literal["LEFT", "CENTER", "RIGHT"]
     theme: Literal["LIGHT", "DARK", "PRIMARY", "SECONDARY"]
 
+
 class HeroPayloadV2(HeroPayloadV1):
     content_width: Literal["STANDARD", "NARROW"] = "STANDARD"
+
 
 SCHEMA_REGISTRY = {
     ("HERO", 1): HeroPayloadV1,
     ("HERO", 2): HeroPayloadV2,  # example - NOT ACTIVE until release-gated
     # ("IMAGE", 1): ImagePayloadV1,
 }
+
 
 def validate_block(envelope: dict) -> KnownBlock:
     key = (envelope["type"], envelope["block_schema_version"])

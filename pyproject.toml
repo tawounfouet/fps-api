@@ -14,6 +14,8 @@ dependencies = [
     "alembic>=1.15,<2",
     "pyjwt[crypto]>=2.9,<3",
     "httpx>=0.28,<1",
+    "boto3>=1.37,<2",
+    "pillow>=13.0.0",
 ]
 
 [dependency-groups]
@@ -62,5 +64,5 @@ explicit_package_bases = true
 namespace_packages = true
 
 [[tool.mypy.overrides]]
-module = ["pytest", "pydantic_settings"]
+module = ["pytest", "pydantic_settings", "boto3", "botocore", "botocore.*"]
 ignore_missing_imports = true

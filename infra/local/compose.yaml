@@ -1,3 +1,5 @@
+name: fps-platform-local
+
 services:
   api:
     build: ../..
@@ -12,10 +14,20 @@ services:
       LOG_LEVEL: INFO
       ALLOWED_ORIGINS: '["http://localhost:3000"]'
       DATABASE_URL: ${FPS_DATABASE_URL:?set FPS_DATABASE_URL}
+      MEDIA_STORAGE_MODE: ${MEDIA_STORAGE_MODE:-fake}
+      MEDIA_BUCKET: fps-media-contract
+      MEDIA_REGION: local
+      MEDIA_ENDPOINT_URL: http://minio:9000
+      MEDIA_ACCESS_KEY_ID: minio-contract-access
+      MEDIA_SECRET_ACCESS_KEY: minio-contract-secret
+      MEDIA_PUBLIC_BASE_URL: http://127.0.0.1:19000/fps-media-contract
+      MEDIA_FORCE_PATH_STYLE: "true"
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:18000:8000"
     depends_on:
       db:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   db:
@@ -25,7 +37,7 @@ services:
       POSTGRES_DB: fps
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:15432:5432"
     volumes:
       - fps_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -34,5 +46,30 @@ services:
       timeout: 5s
       retries: 10
 
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    user: "0:0"
+    entrypoint: |
+      /bin/sh -c "
+      minio server /data --console-address ':9001' &
+      until mc alias set local http://127.0.0.1:9000 minio-contract-access minio-contract-secret >/dev/null 2>&1; do sleep 1; done
+      mc mb --ignore-existing local/fps-media-contract
+      wait
+      "
+    environment:
+      MINIO_ROOT_USER: minio-contract-access
+      MINIO_ROOT_PASSWORD: minio-contract-secret
+    ports:
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
+    volumes:
+      - fps_miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc alias set local http://127.0.0.1:9000 minio-contract-access minio-contract-secret >/dev/null 2>&1 && mc ready local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
 volumes:
   fps_pgdata:
+  fps_miniodata:
